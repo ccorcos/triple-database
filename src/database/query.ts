@@ -1,17 +1,3 @@
-// import {
-// 	Value,
-// 	Direction,
-// 	Index,
-// 	!isVariable,
-// 	Tuple,
-// 	ReadOnlyStorage,
-// 	ScanArgs,
-// } from "./storage"
-// import { compareTuple } from "./compareTuple"
-// import { eav, ave, vea, vae, Tuple3 } from "./triplestore"
-// import { scan } from "./indexHelpers"
-// import { indentCascade, indentText } from "../helpers/printHelpers"
-
 import {
 	ReadOnlyStorage,
 	ScanArgs,
@@ -20,7 +6,6 @@ import {
 } from "tuple-database/storage/types"
 import { compareTuple } from "tuple-database/helpers/compareTuple"
 import { scan } from "tuple-database/helpers/sortedTupleArray"
-
 import { flatten } from "lodash"
 import { indentCascade, indentText } from "../helpers/printHelpers"
 
