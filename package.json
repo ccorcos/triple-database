@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^7.1.2",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "tuple-database": "^1.1.12"
   }
 }

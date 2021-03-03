@@ -1,6 +1,7 @@
 import * as fs from "fs-extra"
 import { rootPath } from "../helpers/rootPath"
-import { assert, it } from "./mocha"
+import { it } from "mocha"
+import * as assert from "assert"
 
 function exists(path: string) {
 	try {
