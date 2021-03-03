@@ -1,0 +1,4 @@
+POPULATE "2b8e6249-fa2c-4093-bdb6-92b8e012413b" [[{"var":"lastName"},1],[{"var":"firstName"},1],[{"var":"id"},1]]
+	SCAN ave ["type", "person", {var: "id"}] - 1 unknown
+		SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown

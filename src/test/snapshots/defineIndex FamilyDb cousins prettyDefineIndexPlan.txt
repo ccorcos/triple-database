@@ -1,0 +1,192 @@
+INDEXER [{var: "id"}, "mom", {var: "mom"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "mom"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "mom"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "cousin"}, "mom", {var: "aunt"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "mom"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "id"}, "mom", {var: "mom"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN eav [{var: "mom"}, "brother", {var: "uncle"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "mom"}, "brother", {var: "uncle"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+INDEXER [{var: "mom"}, "brother", {var: "uncle"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+INDEXER [{var: "cousin"}, "dad", {var: "uncle"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "dad"}] - 1 unknown
+						SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+INDEXER [{var: "id"}, "dad", {var: "dad"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "dad"}, "sister", {var: "aunt"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+			SCAN ave ["mom", {var: "aunt"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "cousin"}, "mom", {var: "aunt"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+				SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 0 unknown
+					SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+						SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+INDEXER [{var: "id"}, "dad", {var: "dad"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "dad"}, "brother", {var: "uncle"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown
+INDEXER [{var: "dad"}, "brother", {var: "uncle"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+	REMOVE
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+			SCAN ave ["dad", {var: "uncle"}, {var: "cousin"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown
+INDEXER [{var: "cousin"}, "dad", {var: "uncle"}] "2f918b40-6f31-48e9-864d-9e1bb698d28d"
+	SET
+		SCAN ave ["brother", {var: "uncle"}, {var: "dad"}] - 1 unknown
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["brother", {var: "uncle"}, {var: "dad"}] - 1 unknown
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 1 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 0 unknown
+				SCAN eav [{var: "cousin"}, "dad", {var: "uncle"}] - 0 unknown
+					SCAN ave ["brother", {var: "uncle"}, {var: "mom"}] - 1 unknown
+						SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+					SCAN eav [{var: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+						SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 0 unknown

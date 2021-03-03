@@ -1,0 +1,3 @@
+SCAN ave ["type", "person", {var: "id"}] - 1 unknown
+	SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+		SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown

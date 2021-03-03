@@ -1,0 +1,4 @@
+SCAN ave ["mom", {var: "mom"}, {var: "person"}] - 2 unknown, 1 evaluations, 0 results
+	SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown, 0 evaluations, 0 results
+SCAN ave ["dad", {var: "dad"}, {var: "person"}] - 2 unknown, 1 evaluations, 0 results
+	SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown, 0 evaluations, 0 results

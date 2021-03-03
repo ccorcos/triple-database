@@ -1,0 +1,23 @@
+{
+	"version": "2.3.4",
+	"compilerOptions": {
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"module": "commonjs",
+		"allowJs": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitThis": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"removeComments": true,
+		"experimentalDecorators": true,
+		"jsx": "react",
+		"target": "es2018",
+		"lib": ["dom", "scripthost", "esnext.asynciterable"],
+		"outDir": "build"
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
+}

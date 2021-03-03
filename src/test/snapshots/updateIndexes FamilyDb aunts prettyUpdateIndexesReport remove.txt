@@ -1,0 +1,9 @@
+REMOVE ["deborah", "sister", "melanie"]
+	INDEXER [{var: "dad"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		BIND {dad: "deborah", aunt: "melanie"}
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown, 1 evaluations, 0 results
+	INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		BIND {mom: "deborah", aunt: "melanie"}
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown, 1 evaluations, 2 results
+				SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown, 2 evaluations, 2 results
+					SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown, 2 evaluations, 0 results

@@ -1,0 +1,28 @@
+INDEXER [{var: "id"}, "mom", {var: "mom"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+	SET
+		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+	SET
+		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+			SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
+				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
+INDEXER [{var: "id"}, "dad", {var: "dad"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+	SET
+		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+	REMOVE
+		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+INDEXER [{var: "dad"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+	SET
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+	REMOVE
+		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+			SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
+				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown

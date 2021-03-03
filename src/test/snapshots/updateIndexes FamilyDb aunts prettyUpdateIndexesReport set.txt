@@ -1,0 +1,7 @@
+SET ["deborah", "sister", "anne"]
+	INDEXER [{var: "dad"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		BIND {dad: "deborah", aunt: "anne"}
+			SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown, 1 evaluations, 0 results
+	INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		BIND {mom: "deborah", aunt: "anne"}
+			SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown, 1 evaluations, 1 results
