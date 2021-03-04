@@ -1,28 +1,27 @@
 import * as _ from "lodash"
-import {
-	Transaction,
-	ReadOnlyStorage,
-	Tuple,
-} from "tuple-database/storage/types"
+import { Transaction, ReadOnlyStorage } from "tuple-database/storage/types"
 import {
 	OrExpression,
 	Expression,
 	AndExpression,
 	Variable,
 	isVariable,
-	VariableSort,
+	Sort,
 	resolveUnknownsInAndExpression,
 	getAndExpressionPlan,
 	prettyAndExpressionPlan,
 	prettyExpression,
+	PartiallySolvedAndExpression,
+	PartiallySolvedOrExpression,
 } from "./query"
 import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
-import { getListenKey } from "./factListenerHelpers"
+import { FactListenKey, getFactListenKey } from "./factListenerHelpers"
+import { indexes } from "./types"
 
 export type DefineIndexArgs = {
-	index: string
+	name: string
 	filter: OrExpression
-	sort: VariableSort
+	sort: Sort
 }
 
 export type DefineIndexPlan = DefineIndexArgs & {
@@ -30,15 +29,15 @@ export type DefineIndexPlan = DefineIndexArgs & {
 }
 
 export type IndexerPlan = {
-	listenKey: Tuple
+	listenKey: FactListenKey
 	args: {
 		index: DefineIndexArgs
 		/** For determining the var names */
 		expression: Expression
 		/* For evaluating the tuple to be added/removed */
-		restAndExpression: AndExpression
-		/* For checking if the tuple is redundant in another expression */
-		restOrExpression: OrExpression
+		restAndExpression: PartiallySolvedAndExpression
+		/* For checking if the tuple is redundant from another expression */
+		restOrExpression: PartiallySolvedOrExpression
 	}
 }
 
@@ -71,7 +70,7 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 					)
 
 				const indexerPlan: IndexerPlan = {
-					listenKey: getListenKey(expression),
+					listenKey: getFactListenKey(expression),
 					args: {
 						index,
 						expression,
@@ -112,7 +111,7 @@ export function prettyDefineIndexPlan(plan: DefineIndexPlan) {
 		return [
 			`INDEXER ${prettyExpression(
 				indexerPlan.args.expression
-			)} ${JSON.stringify(indexerPlan.args.index.index)}`,
+			)} ${JSON.stringify(indexerPlan.args.index.name)}`,
 			`\tSET`,
 			indentText(prettySetIndexerPlan(indexerPlan), 2),
 			`\tREMOVE`,
@@ -127,9 +126,9 @@ export function evaluateDefineIndexPlan(
 	transaction: Transaction,
 	plan: DefineIndexPlan
 ): DefineIndexArgs {
-	transaction.set("indexes", [plan.index, plan])
-	for (const indexer of plan.indexerPlans) {
-		transaction.set("indexers", [indexer.listenKey, indexer.args])
+	transaction.set(indexes.indexesByName, [plan.name, plan])
+	for (const indexerPlan of plan.indexerPlans) {
+		transaction.set(indexes.indexersByKey, [indexerPlan.listenKey, indexerPlan])
 	}
 	return plan
 }
@@ -139,11 +138,13 @@ export function defineIndex(transaction: Transaction, args: DefineIndexArgs) {
 }
 
 export function indexExists(storage: ReadOnlyStorage, plan: DefineIndexPlan) {
-	return storage.scan("indexes", {
-		gte: [plan.index, plan],
-		lte: [plan.index, plan],
+	return storage.scan(indexes.indexesByName, {
+		gte: [plan.name, plan],
+		lte: [plan.name, plan],
 	}).length
 }
+
+// TODO: delete index
 
 function getUnknownsInExpression(expression: Expression): Array<Variable> {
 	return _.uniqWith(expression.filter(isVariable), _.isEqual)

@@ -22,12 +22,12 @@ describe("populateIndex", () => {
 	describe("ContactsDb", () => {
 		snapshotTest("prettyPopulateIndexPlan", () => {
 			const definePlan = getDefineIndexPlan({
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -40,12 +40,12 @@ describe("populateIndex", () => {
 			const storage = createContactsDb()
 			const transaction = storage.transact()
 			const index = defineIndex(transaction, {
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -58,12 +58,12 @@ describe("populateIndex", () => {
 			const storage = createContactsDb()
 			const transaction = storage.transact()
 			const index = defineIndex(transaction, {
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -72,7 +72,7 @@ describe("populateIndex", () => {
 			populateIndex(transaction, index)
 			transaction.commit()
 
-			const data = storage.scan(index.index)
+			const data = storage.scan(index.name)
 			assert.deepEqual(data, [
 				["Corcos", "Chet", "XXX1"],
 				["Corcos", "Leon", "XXX3"],
@@ -90,15 +90,15 @@ describe("populateIndex", () => {
 				const storage = createFamilyDb()
 				const transaction = storage.transact()
 				const index = defineIndex(transaction, {
-					index: "aunts",
+					name: "aunts",
 					filter: [
 						[
-							[id, "mom", mom],
-							[mom, "sister", aunt],
+							[id, { lit: "mom" }, mom],
+							[mom, { lit: "sister" }, aunt],
 						],
 						[
-							[id, "dad", dad],
-							[dad, "sister", aunt],
+							[id, { lit: "dad" }, dad],
+							[dad, { lit: "sister" }, aunt],
 						],
 					],
 					sort: [id, aunt],
@@ -106,7 +106,7 @@ describe("populateIndex", () => {
 				populateIndex(transaction, index)
 				transaction.commit()
 
-				const data = storage.scan(index.index)
+				const data = storage.scan(index.name)
 				assert.deepEqual(data, [
 					["chet", "melanie"],
 					["chet", "ruth"],

@@ -32,9 +32,9 @@ describe("query", () => {
 			const result = querySort(storage, {
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -55,8 +55,8 @@ describe("query", () => {
 		// 	const result = querySort(storage, {
 		// 		filter: [
 		// 			[
-		// 				[id, "type", "person"],
-		// 				[id, "firstName", firstName],
+		// 				[id, {lit: "type"}, {lit: "person"}],
+		// 				[id, {lit: "firstName"}, firstName],
 		// 				[id, "lastName", "Corcos"],
 		// 			],
 		// 		],
@@ -79,9 +79,9 @@ describe("query", () => {
 			const result = querySort(storage, {
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -102,9 +102,9 @@ describe("query", () => {
 			const result = querySort(storage, {
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -121,9 +121,9 @@ describe("query", () => {
 		snapshotTest("prettyOrExpressionPlan", () => {
 			const plan = getOrExpressionPlan([
 				[
-					[id, "type", "person"],
-					[id, "firstName", firstName],
-					[id, "lastName", lastName],
+					[id, { lit: "type" }, { lit: "person" }],
+					[id, { lit: "firstName" }, firstName],
+					[id, { lit: "lastName" }, lastName],
 				],
 			])
 			return prettyOrExpressionPlan(plan)
@@ -135,9 +135,9 @@ describe("query", () => {
 		// 		storage,
 		// 		getOrExpressionPlan([
 		// 			[
-		// 				[id, "type", "person"],
-		// 				[id, "firstName", firstName],
-		// 				[id, "lastName", lastName],
+		// 				[id, {lit: "type"}, {lit: "person"}],
+		// 				[id, {lit: "firstName"}, firstName],
+		// 				[id, {lit:"lastName"}, lastName],
 		// 			],
 		// 		])
 		// 	)
@@ -152,12 +152,12 @@ describe("query", () => {
 				const result = querySort(storage, {
 					filter: [
 						[
-							[person, "mom", mom],
-							[mom, "sister", aunt],
+							[person, { lit: "mom" }, mom],
+							[mom, { lit: "sister" }, aunt],
 						],
 						[
-							[person, "dad", dad],
-							[dad, "sister", aunt],
+							[person, { lit: "dad" }, dad],
+							[dad, { lit: "sister" }, aunt],
 						],
 					],
 					sort: [person, aunt],
@@ -173,12 +173,12 @@ describe("query", () => {
 			snapshotTest("prettyOrExpressionPlan", () => {
 				const plan = getOrExpressionPlan([
 					[
-						[person, "mom", mom],
-						[mom, "sister", aunt],
+						[person, { lit: "mom" }, mom],
+						[mom, { lit: "sister" }, aunt],
 					],
 					[
-						[person, "dad", dad],
-						[dad, "sister", aunt],
+						[person, { lit: "dad" }, dad],
+						[dad, { lit: "sister" }, aunt],
 					],
 				])
 				return prettyOrExpressionPlan(plan)
@@ -190,12 +190,12 @@ describe("query", () => {
 			// 		storage,
 			// 		getOrExpressionPlan([
 			// 			[
-			// 				[person, "mom", mom],
-			// 				[mom, "sister", aunt],
+			// 				[person, {lit: "mom"}, mom],
+			// 				[mom, {lit: "sister"}, aunt],
 			// 			],
 			// 			[
-			// 				[person, "dad", dad],
-			// 				[dad, "sister", aunt],
+			// 				[person, {lit: "dad"}, dad],
+			// 				[dad, {lit: "sister"}, aunt],
 			// 			],
 			// 		])
 			// 	)
@@ -219,18 +219,18 @@ describe("query", () => {
 			)
 		}
 
-		test(["chet", { var: "A" }, { var: "V" }], [{ A: "age", V: 28 }])
-		test(["chet", { var: "A" }, 28], [{ A: "age" }])
-		test(["chet", "age", { var: "V" }], [{ V: 28 }])
-		test([{ var: "E" }, "age", { var: "V" }], [{ E: "chet", V: 28 }])
-		test([{ var: "E" }, "age", 28], [{ E: "chet" }])
-		test([{ var: "E" }, { var: "A" }, 28], [{ E: "chet", A: "age" }])
+		test([{ lit: "chet" }, { var: "A" }, { var: "V" }], [{ A: "age", V: 28 }])
+		test([{ lit: "chet" }, { var: "A" }, { lit: 28 }], [{ A: "age" }])
+		test([{ lit: "chet" }, { lit: "age" }, { var: "V" }], [{ V: 28 }])
+		test([{ var: "E" }, { lit: "age" }, { var: "V" }], [{ E: "chet", V: 28 }])
+		test([{ var: "E" }, { lit: "age" }, { lit: 28 }], [{ E: "chet" }])
+		test([{ var: "E" }, { var: "A" }, { lit: 28 }], [{ E: "chet", A: "age" }])
 		test(
 			[{ var: "E" }, { var: "A" }, { var: "V" }],
 			[{ E: "chet", A: "age", V: 28 }]
 		)
-		test(["chet", "age", 28], [{}])
-		test(["chet", "age", 29], [])
+		test([{ lit: "chet" }, { lit: "age" }, { lit: 28 }], [{}])
+		test([{ lit: "chet" }, { lit: "age" }, { lit: 29 }], [])
 	})
 
 	it("Multi-value", () => {
@@ -251,8 +251,11 @@ describe("query", () => {
 			)
 		}
 
-		test(["chet", "color", { var: "C" }], [{ C: "blue" }, { C: "red" }])
-		test([{ var: "E" }, "color", "red"], [{ E: "chet" }])
+		test(
+			[{ lit: "chet" }, { lit: "color" }, { var: "C" }],
+			[{ C: "blue" }, { C: "red" }]
+		)
+		test([{ var: "E" }, { lit: "color" }, { lit: "red" }], [{ E: "chet" }])
 
 		transaction = storage.transact()
 		write(transaction, {
@@ -261,9 +264,12 @@ describe("query", () => {
 		})
 		transaction.commit()
 
-		test(["chet", "color", { var: "C" }], [{ C: "blue" }, { C: "green" }])
-		test([{ var: "E" }, "color", "red"], [])
-		test([{ var: "E" }, "color", "green"], [{ E: "chet" }])
-		test(["chet", "color", "green"], [{}])
+		test(
+			[{ lit: "chet" }, { lit: "color" }, { var: "C" }],
+			[{ C: "blue" }, { C: "green" }]
+		)
+		test([{ var: "E" }, { lit: "color" }, { lit: "red" }], [])
+		test([{ var: "E" }, { lit: "color" }, { lit: "green" }], [{ E: "chet" }])
+		test([{ lit: "chet" }, { lit: "color" }, { lit: "green" }], [{}])
 	})
 })

@@ -5,13 +5,8 @@ import {
 	prettySetIndexerPlan,
 	DefineIndexArgs,
 } from "./defineIndex"
-import {
-	ReadOnlyStorage,
-	Transaction,
-	Tuple,
-	Value,
-} from "tuple-database/storage/types"
-import { generateListenKeys } from "./factListenerHelpers"
+import { ReadOnlyStorage, Transaction } from "tuple-database/storage/types"
+import { generateFactListenKeys } from "./factListenerHelpers"
 import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
 import {
 	prettyExpression,
@@ -19,45 +14,37 @@ import {
 	Binding,
 	getAndExpressionPlan,
 	evaluateAndExpressionPlan,
-	VariableSort,
 	AndExpressionReport,
 	OrExpressionReport,
 	prettyAndExpressionReport,
 	prettyOrExpressionReport,
 	isVariable,
+	prettyFact,
 } from "./query"
-
-type Tuple3 = [Value, Value, Value]
-
-type OpType = "set" | "remove"
+import { Fact, Tuple, Operation, indexes } from "./types"
+import { unreachable } from "../helpers/typeHelpers"
 
 export type UpdateIndexesPlan = {
-	opType: OpType
-	fact: Tuple3
+	operation: Operation
 	indexerPlans: Array<IndexerPlan>
 }
 
 export function getUpdateIndexesPlan(
 	storage: ReadOnlyStorage,
-	opType: OpType,
-	fact: Tuple3
+	operation: Operation
 ) {
 	const updateIndexesPlan: UpdateIndexesPlan = {
-		fact,
-		opType,
+		operation,
 		indexerPlans: [],
 	}
-	const listenKeys = generateListenKeys(fact)
+	const listenKeys = generateFactListenKeys(operation.fact)
 	for (const listenKey of listenKeys) {
-		const indexerResults = storage.scan("indexers", {
+		const indexerResults = storage.scan(indexes.indexersByKey, {
 			prefix: [listenKey],
 		})
-		for (const [_listenKey, jsonIndexerPlanArgs] of indexerResults) {
-			const args: IndexerPlan["args"] = JSON.parse(
-				jsonIndexerPlanArgs as string
-			)
-			const indexerPlan: IndexerPlan = { listenKey, args }
-
+		for (const [_listenKey, elm] of indexerResults) {
+			// TODO: don't cast, use `data-type-ts`.
+			const indexerPlan = elm as IndexerPlan
 			updateIndexesPlan.indexerPlans.push(indexerPlan)
 		}
 	}
@@ -73,8 +60,7 @@ export type IndexerReport = {
 }
 
 export type UpdateIndexesReport = {
-	opType: OpType
-	fact: Tuple3
+	operation: Operation
 	indexerReports: Array<IndexerReport>
 }
 
@@ -82,11 +68,10 @@ export function evaluateUpdateIndexesPlan(
 	transaction: Transaction,
 	updateIndexesPlan: UpdateIndexesPlan
 ): UpdateIndexesReport {
-	const { fact, opType, indexerPlans } = updateIndexesPlan
+	const { operation, indexerPlans } = updateIndexesPlan
 
 	const updateIndexesReport: UpdateIndexesReport = {
-		fact,
-		opType,
+		operation,
 		indexerReports: [],
 	}
 
@@ -98,7 +83,7 @@ export function evaluateUpdateIndexesPlan(
 			restOrExpression,
 		} = indexerPlan.args
 
-		const binding = getBindingFromIndexListener(expression, fact)
+		const binding = getBindingFromIndexListener(expression, operation.fact)
 		const andExpressionPlan = getAndExpressionPlan(restAndExpression, binding)
 		const {
 			bindings: partialBindings,
@@ -116,13 +101,13 @@ export function evaluateUpdateIndexesPlan(
 		for (const partialBinding of partialBindings) {
 			const fullBinding = { ...partialBinding, ...binding }
 			const tuple = index.sort.map((unknown) => fullBinding[unknown.var])
-			if (opType === "set") {
+			if (operation.type === "set") {
 				// If we're adding to an index then we can add right now and it will get
 				// deduped with any results from the other AndExpressions that are part
 				// of the Or.
-				transaction.set(index.index, tuple)
+				transaction.set(index.name, tuple)
 				indexerReport.write.set.push(tuple)
-			} else {
+			} else if (operation.type === "remove") {
 				// If we're removing, we need to check that this tuple doesn't satisfy any
 				// of the other AndExpressions in the Or.
 				let existsInOtherExpression = false
@@ -138,9 +123,11 @@ export function evaluateUpdateIndexesPlan(
 					}
 				}
 				if (!existsInOtherExpression) {
-					transaction.remove(index.index, tuple)
+					transaction.remove(index.name, tuple)
 					indexerReport.write.remove.push(tuple)
 				}
+			} else {
+				throw unreachable(operation)
 			}
 		}
 
@@ -155,18 +142,14 @@ export function evaluateUpdateIndexesPlan(
 	return updateIndexesReport
 }
 
-export function updateIndexes(
-	transaction: Transaction,
-	opType: OpType,
-	fact: Tuple3
-) {
+export function updateIndexes(transaction: Transaction, operation: Operation) {
 	return evaluateUpdateIndexesPlan(
 		transaction,
-		getUpdateIndexesPlan(transaction, opType, fact)
+		getUpdateIndexesPlan(transaction, operation)
 	)
 }
 
-function getBindingFromIndexListener(expression: Expression, fact: Tuple3) {
+function getBindingFromIndexListener(expression: Expression, fact: Fact) {
 	const binding: Binding = {}
 	for (let i = 0; i < expression.length; i++) {
 		const elm = expression[i]
@@ -178,24 +161,24 @@ function getBindingFromIndexListener(expression: Expression, fact: Tuple3) {
 }
 
 export function prettyUpdateIndexesPlan(updateIndexesPlan: UpdateIndexesPlan) {
-	const { fact, opType, indexerPlans } = updateIndexesPlan
+	const { operation, indexerPlans } = updateIndexesPlan
 	const indexerUpdates = indexerPlans
 		.map((indexerPlan) => {
 			const plan =
-				opType === "set"
+				operation.type === "set"
 					? prettySetIndexerPlan(indexerPlan)
 					: prettyRemoveIndexerPlan(indexerPlan)
 			return [
 				`INDEXER ${prettyExpression(
 					indexerPlan.args.expression
-				)} ${JSON.stringify(indexerPlan.args.index.index)}`,
+				)} ${JSON.stringify(indexerPlan.args.index.name)}`,
 				indentText(plan),
 			].join("\n")
 		})
 		.join("\n")
 
 	return [
-		`${opType.toUpperCase()} ${prettyExpression(fact)}`,
+		`${operation.type.toUpperCase()} ${prettyFact(operation.fact)}`,
 		indentText(indexerUpdates),
 	].join("\n")
 }
@@ -203,7 +186,7 @@ export function prettyUpdateIndexesPlan(updateIndexesPlan: UpdateIndexesPlan) {
 export function prettyUpdateIndexesReport(
 	updateIndexesReport: UpdateIndexesReport
 ) {
-	const { fact, opType, indexerReports } = updateIndexesReport
+	const { operation, indexerReports } = updateIndexesReport
 	const indexerUpdates = indexerReports
 		.map((indexerReport) => {
 			let andReport = indentText(
@@ -212,7 +195,7 @@ export function prettyUpdateIndexesReport(
 
 			return _.compact([
 				`INDEXER ${prettyExpression(indexerReport.expression)} ${JSON.stringify(
-					indexerReport.index.index
+					indexerReport.index.name
 				)}`,
 				andReport,
 				indexerReport.restOrExpressionReport.length &&
@@ -225,7 +208,7 @@ export function prettyUpdateIndexesReport(
 		.join("\n")
 
 	return [
-		`${opType.toUpperCase()} ${prettyExpression(fact)}`,
+		`${operation.type.toUpperCase()} ${prettyFact(operation.fact)}`,
 		indentText(indexerUpdates),
 	].join("\n")
 }

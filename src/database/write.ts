@@ -1,4 +1,5 @@
-import { Value, Transaction } from "tuple-database/storage/types"
+import { Transaction } from "tuple-database/storage/types"
+import { Fact } from "./types"
 import {
 	updateIndexes,
 	UpdateIndexesReport,
@@ -7,13 +8,11 @@ import {
 
 type WriteReport = Array<UpdateIndexesReport>
 
-type Tuple3 = [Value, Value, Value]
-
-export type WriteArgs = { set?: Array<Tuple3>; remove?: Array<Tuple3> }
+export type WriteArgs = { set?: Array<Fact>; remove?: Array<Fact> }
 
 export function write(
 	transaction: Transaction,
-	args: { set?: Array<Tuple3>; remove?: Array<Tuple3> }
+	args: { set?: Array<Fact>; remove?: Array<Fact> }
 ): WriteReport {
 	const writeReport: WriteReport = []
 
@@ -23,7 +22,9 @@ export function write(
 			transaction.set("ave", [a, v, e])
 			transaction.set("vae", [v, a, e])
 			transaction.set("vea", [v, e, a])
-			writeReport.push(updateIndexes(transaction, "set", [e, a, v]))
+			writeReport.push(
+				updateIndexes(transaction, { type: "set", fact: [e, a, v] })
+			)
 		}
 	}
 
@@ -33,7 +34,9 @@ export function write(
 			transaction.remove("ave", [a, v, e])
 			transaction.remove("vae", [v, a, e])
 			transaction.remove("vea", [v, e, a])
-			writeReport.push(updateIndexes(transaction, "remove", [e, a, v]))
+			writeReport.push(
+				updateIndexes(transaction, { type: "remove", fact: [e, a, v] })
+			)
 		}
 	}
 	return writeReport

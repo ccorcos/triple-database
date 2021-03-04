@@ -16,12 +16,12 @@ describe("defineIndex", () => {
 	describe("ContactsDb", () => {
 		snapshotTest("prettyDefineIndexPlan", () => {
 			const plan = getDefineIndexPlan({
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -34,15 +34,15 @@ describe("defineIndex", () => {
 		describe("aunts", () => {
 			snapshotTest("prettyDefineIndexPlan", () => {
 				const plan = getDefineIndexPlan({
-					index: "aunts",
+					name: "aunts",
 					filter: [
 						[
-							[id, "mom", mom],
-							[mom, "sister", aunt],
+							[id, { lit: "mom" }, mom],
+							[mom, { lit: "sister" }, aunt],
 						],
 						[
-							[id, "dad", dad],
-							[dad, "sister", aunt],
+							[id, { lit: "dad" }, dad],
+							[dad, { lit: "sister" }, aunt],
 						],
 					],
 					sort: [aunt, id],
@@ -54,27 +54,27 @@ describe("defineIndex", () => {
 		describe("cousins", () => {
 			snapshotTest("prettyDefineIndexPlan", () => {
 				const plan = getDefineIndexPlan({
-					index: "cousins",
+					name: "cousins",
 					filter: [
 						[
-							[id, "mom", mom],
-							[mom, "sister", aunt],
-							[cousin, "mom", aunt],
+							[id, { lit: "mom" }, mom],
+							[mom, { lit: "sister" }, aunt],
+							[cousin, { lit: "mom" }, aunt],
 						],
 						[
-							[id, "mom", mom],
-							[mom, "brother", uncle],
-							[cousin, "dad", uncle],
+							[id, { lit: "mom" }, mom],
+							[mom, { lit: "brother" }, uncle],
+							[cousin, { lit: "dad" }, uncle],
 						],
 						[
-							[id, "dad", dad],
-							[dad, "sister", aunt],
-							[cousin, "mom", aunt],
+							[id, { lit: "dad" }, dad],
+							[dad, { lit: "sister" }, aunt],
+							[cousin, { lit: "mom" }, aunt],
 						],
 						[
-							[id, "dad", dad],
-							[dad, "brother", uncle],
-							[cousin, "dad", uncle],
+							[id, { lit: "dad" }, dad],
+							[dad, { lit: "brother" }, uncle],
+							[cousin, { lit: "dad" }, uncle],
 						],
 					],
 					sort: [cousin, id],

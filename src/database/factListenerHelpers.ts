@@ -1,31 +1,36 @@
-// import { Tuple3 } from "./triplestore"
-// import { isValue, Value } from "./storage"
-// import * as json from "../helpers/json"
-import { Tuple, Value } from "tuple-database/storage/types"
-import { isVariable, Variable } from "./query"
+import { Expression, isLiteral, Literal } from "./query"
+import { Fact } from "./types"
 
-// TODO: something better than "*"
-export function getListenKey(expression: Array<Value | Variable>) {
-	return expression.map((item) => (!isVariable(item) ? item : "*"))
+export type Wildcard = { wild: true }
+const wildcard: Wildcard = { wild: true }
+
+export type FactListenKey = [
+	Literal | Wildcard,
+	Literal | Wildcard,
+	Literal | Wildcard
+]
+
+export function getFactListenKey(expression: Expression): FactListenKey {
+	return [
+		isLiteral(expression[0]) ? expression[0] : wildcard,
+		isLiteral(expression[1]) ? expression[1] : wildcard,
+		isLiteral(expression[2]) ? expression[2] : wildcard,
+	]
 }
-
-type Tuple3 = [Value, Value, Value]
 
 /**
  * Given a fact, return a list of all listeners to fire.
  */
-export function generateListenKeys(fact: Tuple3) {
-	const listenKeys: Array<Tuple> = []
+export function generateFactListenKeys(fact: Fact) {
+	const listenKeys: Array<FactListenKey> = []
 	for (const entity of [true, false]) {
 		for (const attribute of [true, false]) {
 			for (const value of [true, false]) {
-				listenKeys.push(
-					getListenKey([
-						entity ? fact[0] : { var: "" },
-						attribute ? fact[1] : { var: "" },
-						value ? fact[2] : { var: "" },
-					])
-				)
+				listenKeys.push([
+					entity ? { lit: fact[0] } : wildcard,
+					attribute ? { lit: fact[1] } : wildcard,
+					value ? { lit: fact[2] } : wildcard,
+				])
 			}
 		}
 	}

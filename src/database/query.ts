@@ -1,35 +1,29 @@
-import {
-	ReadOnlyStorage,
-	ScanArgs,
-	Tuple,
-	Value,
-} from "tuple-database/storage/types"
+import { ReadOnlyStorage, ScanArgs } from "tuple-database/storage/types"
 import { compareTuple } from "tuple-database/helpers/compareTuple"
 import { scan } from "tuple-database/helpers/sortedTupleArray"
 import { flatten } from "lodash"
 import { indentCascade, indentText } from "../helpers/printHelpers"
-
-type Tuple3 = [Value, Value, Value]
+import { Tuple, Value, Fact } from "./types"
 
 export type Variable = { var: string }
+export type Literal = { lit: Value }
 
-export function isVariable(x: any): x is Variable | Solved {
-	return Boolean(x && x.var)
+export function isVariable(x: any): x is Variable {
+	return Boolean(x && typeof x === "object" && "var" in x)
+}
+
+export function isLiteral(x: any): x is Literal {
+	return Boolean(x && typeof x === "object" && "lit" in x)
 }
 
 /**
  * When creating a plan, this represents an unkown variable that will is solved
  * by previous expressions.
  */
-export type Solved = { var: string; solved: true }
-// TODO: {solved: string}
+export type Solved = { solved: string }
 
 export function isSolved(x: any): x is Solved {
-	return x && x.var && x.solved
-}
-
-export function isUnsolvedVariable(x: any): x is Variable {
-	return Boolean(x && x.var && !x.solved)
+	return Boolean(x && typeof x === "object" && "solved" in x)
 }
 
 /**
@@ -37,7 +31,11 @@ export function isUnsolvedVariable(x: any): x is Variable {
  */
 export type Binding = { [name: string]: Value }
 
-export type Expression = [Value | Variable, Value | Variable, Value | Variable]
+export type Expression = [
+	Literal | Variable,
+	Literal | Variable,
+	Literal | Variable
+]
 
 // TODO: {and: Array<Expression>}
 export type AndExpression = Array<Expression>
@@ -49,18 +47,17 @@ export type OrExpression = Array<AndExpression>
  * Intermediate state when generating the plan some unknowns are solved.
  */
 export type PartiallySolvedExpression = [
-	Variable | Value | Solved,
-	Variable | Value | Solved,
-	Variable | Value | Solved
+	Variable | Literal | Solved,
+	Variable | Literal | Solved,
+	Variable | Literal | Solved
 ]
 
 export type PartiallySolvedAndExpression = Array<PartiallySolvedExpression>
-
-export type SolvedExpression = [Value | Solved, Value | Solved, Value | Solved]
+export type PartiallySolvedOrExpression = Array<PartiallySolvedAndExpression>
 
 export type ExpressionPlan = {
 	index: string
-	prefix: Array<Value | Solved>
+	prefix: Array<Literal | Solved>
 	unknowns: Array<Variable>
 	// Data is saved in the database as:
 	// index: [...prefix, ...unknowns]
@@ -71,9 +68,9 @@ export function getExpressionPlan(
 ): ExpressionPlan {
 	const [entity, attribute, value] = expression
 
-	if (!isVariable(entity) || isSolved(entity)) {
-		if (!isVariable(attribute) || isSolved(attribute)) {
-			if (!isVariable(value) || isSolved(value)) {
+	if (isLiteral(entity) || isSolved(entity)) {
+		if (isLiteral(attribute) || isSolved(attribute)) {
+			if (isLiteral(value) || isSolved(value)) {
 				// EAV.
 				// Everything in is known, but we still scan to see if it exists or not.
 				return {
@@ -86,6 +83,7 @@ export function getExpressionPlan(
 					// and value = $value
 				}
 			} else {
+				value
 				// EA_
 				return {
 					index: "eav",
@@ -97,7 +95,7 @@ export function getExpressionPlan(
 				// and attribute = $attribute
 			}
 		} else {
-			if (!isVariable(value) || isSolved(value)) {
+			if (isLiteral(value) || isSolved(value)) {
 				// E_V
 				return {
 					index: "vea",
@@ -121,8 +119,8 @@ export function getExpressionPlan(
 			}
 		}
 	} else {
-		if (!isVariable(attribute) || isSolved(attribute)) {
-			if (!isVariable(value) || isSolved(value)) {
+		if (isLiteral(attribute) || isSolved(attribute)) {
+			if (isLiteral(value) || isSolved(value)) {
 				// _AV
 				return {
 					index: "ave",
@@ -139,7 +137,7 @@ export function getExpressionPlan(
 				}
 			}
 		} else {
-			if (!isVariable(value) || isSolved(value)) {
+			if (isLiteral(value) || isSolved(value)) {
 				// __V
 				// Warning: this is expensive.
 				return {
@@ -236,10 +234,7 @@ export function resolveUnknownsInExpression(
 	const tuple = expression.map((value) => {
 		for (const unknown of unknowns) {
 			if (isVariable(value) && value.var === unknown.var) {
-				const solved: Solved = {
-					...unknown,
-					solved: true,
-				}
+				const solved: Solved = { solved: unknown.var }
 				return solved
 			}
 		}
@@ -266,7 +261,7 @@ function evaluateExpressionPlan(
 	plan: ExpressionPlan
 ): Array<Binding> {
 	const prefix: Tuple = plan.prefix.map((elm) => {
-		if (!isVariable(elm)) {
+		if (isLiteral(elm)) {
 			return elm
 		} else {
 			throw new Error("Unresolved plan.\n" + JSON.stringify(plan, null, 2))
@@ -288,7 +283,10 @@ function evaluateExpressionPlan(
 
 export type ExpressionReport = {
 	plan: ExpressionPlan
+	// How many times this expression was run?
+	// If this expresion is not evaluated first, it will be recursively evaluating.
 	evaluationCount: number
+	// How many results were there from this expression?
 	resultCount: number
 }
 
@@ -366,8 +364,8 @@ export function resolveBindingInExpressionPlan(
 	return {
 		...rest,
 		prefix: prefix.map((elm) => {
-			if (isSolved(elm) && elm.var in binding) {
-				return binding[elm.var]
+			if (isSolved(elm) && elm.solved in binding) {
+				return { lit: binding[elm.solved] }
 			} else {
 				return elm
 			}
@@ -400,13 +398,17 @@ export function evaluateOrExpressionPlan(
 	return { report, bindings }
 }
 
-export type VariableSort = Array<Variable>
+export type Sort = Array<Variable>
 
 export type QuerySortArgs = {
-	filter: OrExpression
-	sort: VariableSort // TODO: result
-	scan?: ScanArgs
+	// Bind(Expression): Expression
 	bind?: Binding
+	// Filter(Expression): Bindings
+	filter: OrExpression
+	// Sort(Binding): Tuple
+	sort: Sort
+	// Scan(Tuple): Tuple
+	scan?: ScanArgs
 }
 
 export function querySort(storage: ReadOnlyStorage, args: QuerySortArgs) {
@@ -459,12 +461,20 @@ function prettyExpressionPlan(plan: ExpressionPlan): string {
 	].join("")
 }
 
-export function prettyExpression(tuple: Array<Value | Variable>) {
+export function prettyFact(tuple: Array<Value>) {
+	return prettyExpression(tuple.map((value) => ({ lit: value })))
+}
+
+export function prettyExpression(tuple: Array<Literal | Variable | Solved>) {
 	return [
 		`[`,
 		tuple
 			.map((elm) =>
-				!isVariable(elm) ? JSON.stringify(elm) : `{var: "${elm.var}"}`
+				isLiteral(elm)
+					? JSON.stringify(elm.lit)
+					: isVariable(elm)
+					? `{var: "${elm.var}"}`
+					: `{solved: "${elm.solved}"`
 			)
 			.join(", "),
 		`]`,
@@ -517,35 +527,46 @@ export function resolveBindingInAndExpression(
 	)
 }
 
-function expresionToTuple3(expression: Expression): Tuple3 {
+function expresionToFact(expression: Expression): Fact {
 	for (const item of expression) {
-		if (!isVariable(item)) {
+		if (!isLiteral(item)) {
 			throw new Error(
 				"Could not resolve expression: " + JSON.stringify({ expression, item })
 			)
 		}
 	}
-	return expression as Tuple3
+
+	const values = expression.map((item) => {
+		if (isLiteral(item)) {
+			return item.lit
+		} else {
+			throw new Error(
+				"Could not resolve expression: " + JSON.stringify({ expression, item })
+			)
+		}
+	})
+
+	return values as Fact
 }
 
 export function resolveFactsFromAndExpression(
 	andExpression: AndExpression,
 	binding: Binding
-): Array<Tuple3> {
+): Array<Fact> {
 	const maybeFacts = resolveBindingInAndExpression(andExpression, binding)
-	return maybeFacts.map(expresionToTuple3)
+	return maybeFacts.map(expresionToFact)
 }
 
 export function resolveBindingInExpression(
 	expression: Expression,
 	binding: Binding
 ) {
-	const tuple = expression.map((elm) => {
-		if (!isVariable(elm)) {
+	const tuple: Array<Literal | Variable> = expression.map((elm) => {
+		if (isLiteral(elm)) {
 			return elm
 		}
 		if (elm.var in binding) {
-			return binding[elm.var]
+			return { lit: binding[elm.var] }
 		}
 		return elm
 	})

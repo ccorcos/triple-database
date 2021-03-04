@@ -1,7 +1,7 @@
 import { Transaction } from "tuple-database/storage/types"
 import {
 	OrExpressionPlan,
-	VariableSort,
+	Sort,
 	getOrExpressionPlan,
 	prettyOrExpressionPlan,
 	OrExpressionReport,
@@ -14,20 +14,19 @@ import { indentCascade } from "../helpers/printHelpers"
 export type PopulateIndexPlan = {
 	index: DefineIndexArgs
 	orExpressionPlan: OrExpressionPlan
-	sort: VariableSort
 }
 
 export function getPopulateIndexPlan(
 	index: DefineIndexArgs
 ): PopulateIndexPlan {
-	const { filter, sort } = index
-	return { index, sort, orExpressionPlan: getOrExpressionPlan(filter) }
+	const { filter } = index
+	return { index, orExpressionPlan: getOrExpressionPlan(filter) }
 }
 
 export function prettyPopulateIndexPlan(populateIndexPlan: PopulateIndexPlan) {
 	return indentCascade([
-		`POPULATE ${JSON.stringify(populateIndexPlan.index.index)} ${JSON.stringify(
-			populateIndexPlan.sort
+		`POPULATE ${JSON.stringify(populateIndexPlan.index.name)} ${JSON.stringify(
+			populateIndexPlan.index.sort
 		)}`,
 		prettyOrExpressionPlan(populateIndexPlan.orExpressionPlan),
 	])
@@ -36,27 +35,25 @@ export function prettyPopulateIndexPlan(populateIndexPlan: PopulateIndexPlan) {
 export type PopulateIndexReport = {
 	index: DefineIndexArgs
 	orExpressionReport: OrExpressionReport
-	sort: VariableSort
 }
 
 export function evaluatePopulateIndexPlan(
 	transaction: Transaction,
 	populateIndexPlan: PopulateIndexPlan
 ) {
-	const { index, orExpressionPlan, sort } = populateIndexPlan
+	const { index, orExpressionPlan } = populateIndexPlan
 	const { report: orExpressionReport, bindings } = evaluateOrExpressionPlan(
 		transaction,
 		orExpressionPlan
 	)
 
 	for (const binding of bindings) {
-		const tuple = sort.map((variable) => binding[variable.var])
-		transaction.set("index", tuple)
+		const tuple = index.sort.map((variable) => binding[variable.var])
+		transaction.set(index.name, tuple)
 	}
 	const report: PopulateIndexReport = {
 		index,
 		orExpressionReport,
-		sort,
 	}
 	return report
 }
@@ -66,8 +63,8 @@ export function prettyPopulateIndexReport(
 ) {
 	return indentCascade([
 		`POPULATE ${JSON.stringify(
-			populateIndexReport.index.index
-		)} ${JSON.stringify(populateIndexReport.sort)}`,
+			populateIndexReport.index.name
+		)} ${JSON.stringify(populateIndexReport.index.sort)}`,
 		prettyOrExpressionReport(populateIndexReport.orExpressionReport),
 	])
 }

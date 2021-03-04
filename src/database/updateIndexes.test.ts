@@ -28,23 +28,22 @@ describe("updateIndexes", () => {
 			const storage = createContactsDb()
 			const transaction = storage.transact()
 			defineIndex(transaction, {
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
 			})
 			transaction.commit()
 
-			const plan = getUpdateIndexesPlan(storage, "set", [
-				"XXXX",
-				"firstName",
-				"Joe",
-			])
+			const plan = getUpdateIndexesPlan(storage, {
+				type: "set",
+				fact: ["XXXX", "firstName", "Joe"],
+			})
 
 			return prettyUpdateIndexesPlan(plan)
 		})
@@ -53,22 +52,21 @@ describe("updateIndexes", () => {
 			const storage = createContactsDb()
 			const transaction = storage.transact()
 			defineIndex(transaction, {
-				index: "person-last-first",
+				name: "person-last-first",
 				filter: [
 					[
-						[id, "type", "person"],
-						[id, "firstName", firstName],
-						[id, "lastName", lastName],
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
 			})
 
-			const report = updateIndexes(transaction, "set", [
-				"XXXX",
-				"firstName",
-				"Joe",
-			])
+			const report = updateIndexes(transaction, {
+				type: "set",
+				fact: ["XXXX", "firstName", "Joe"],
+			})
 
 			return prettyUpdateIndexesReport(report)
 		})
@@ -80,26 +78,25 @@ describe("updateIndexes", () => {
 				const storage = createFamilyDb()
 				const transaction = storage.transact()
 				defineIndex(transaction, {
-					index: "aunts",
+					name: "aunts",
 					filter: [
 						[
-							[id, "mom", mom],
-							[mom, "sister", aunt],
+							[id, { lit: "mom" }, mom],
+							[mom, { lit: "sister" }, aunt],
 						],
 						[
-							[id, "dad", dad],
-							[dad, "sister", aunt],
+							[id, { lit: "dad" }, dad],
+							[dad, { lit: "sister" }, aunt],
 						],
 					],
 					sort: [aunt, id],
 				})
 				transaction.commit()
 
-				const plan = getUpdateIndexesPlan(storage, "remove", [
-					"deborah",
-					"sister",
-					"melanie",
-				])
+				const plan = getUpdateIndexesPlan(storage, {
+					type: "remove",
+					fact: ["deborah", "sister", "melanie"],
+				})
 
 				return prettyUpdateIndexesPlan(plan)
 			})
@@ -109,26 +106,25 @@ describe("updateIndexes", () => {
 					const storage = createFamilyDb()
 					const transaction = storage.transact()
 					defineIndex(transaction, {
-						index: "aunts",
+						name: "aunts",
 						filter: [
 							[
-								[id, "mom", mom],
-								[mom, "sister", aunt],
+								[id, { lit: "mom" }, mom],
+								[mom, { lit: "sister" }, aunt],
 							],
 							[
-								[id, "dad", dad],
-								[dad, "sister", aunt],
+								[id, { lit: "dad" }, dad],
+								[dad, { lit: "sister" }, aunt],
 							],
 						],
 						sort: [aunt, id],
 					})
 					transaction.commit()
 
-					const report = updateIndexes(transaction, "set", [
-						"deborah",
-						"sister",
-						"anne",
-					])
+					const report = updateIndexes(transaction, {
+						type: "set",
+						fact: ["deborah", "sister", "anne"],
+					})
 
 					return prettyUpdateIndexesReport(report)
 				})
@@ -137,15 +133,15 @@ describe("updateIndexes", () => {
 					const storage = createFamilyDb()
 					const transaction = storage.transact()
 					defineIndex(transaction, {
-						index: "aunts",
+						name: "aunts",
 						filter: [
 							[
-								[id, "mom", mom],
-								[mom, "sister", aunt],
+								[id, { lit: "mom" }, mom],
+								[mom, { lit: "sister" }, aunt],
 							],
 							[
-								[id, "dad", dad],
-								[dad, "sister", aunt],
+								[id, { lit: "dad" }, dad],
+								[dad, { lit: "sister" }, aunt],
 							],
 						],
 						sort: [aunt, id],
@@ -157,11 +153,10 @@ describe("updateIndexes", () => {
 					})
 					transaction.commit()
 
-					const report = updateIndexes(transaction, "remove", [
-						"deborah",
-						"sister",
-						"melanie",
-					])
+					const report = updateIndexes(transaction, {
+						type: "remove",
+						fact: ["deborah", "sister", "melanie"],
+					})
 
 					return prettyUpdateIndexesReport(report)
 				})
@@ -172,15 +167,15 @@ describe("updateIndexes", () => {
 			const storage = createFamilyDb()
 			const transaction = storage.transact()
 			const index = defineIndex(transaction, {
-				index: "aunts",
+				name: "aunts",
 				filter: [
 					[
-						[id, "mom", mom],
-						[mom, "sister", aunt],
+						[id, { lit: "mom" }, mom],
+						[mom, { lit: "sister" }, aunt],
 					],
 					[
-						[id, "dad", dad],
-						[dad, "sister", aunt],
+						[id, { lit: "dad" }, dad],
+						[dad, { lit: "sister" }, aunt],
 					],
 				],
 				sort: [id, aunt],
@@ -191,7 +186,7 @@ describe("updateIndexes", () => {
 			})
 			transaction.commit()
 
-			const data = storage.scan(index.index)
+			const data = storage.scan(index.name)
 			assert.deepEqual(data, [
 				["chet", "melanie"],
 				["chet", "ruth"],
@@ -208,15 +203,15 @@ describe("updateIndexes", () => {
 			const storage = createFamilyDb()
 			const transaction = storage.transact()
 			const index = defineIndex(transaction, {
-				index: "aunts",
+				name: "aunts",
 				filter: [
 					[
-						[id, "mom", mom],
-						[mom, "sister", aunt],
+						[id, { lit: "mom" }, mom],
+						[mom, { lit: "sister" }, aunt],
 					],
 					[
-						[id, "dad", dad],
-						[dad, "sister", aunt],
+						[id, { lit: "dad" }, dad],
+						[dad, { lit: "sister" }, aunt],
 					],
 				],
 				sort: [id, aunt],
@@ -227,7 +222,7 @@ describe("updateIndexes", () => {
 			})
 			transaction.commit()
 
-			const data = storage.scan(index.index)
+			const data = storage.scan(index.name)
 			assert.deepEqual(data, [
 				["chet", "ruth"],
 				["chet", "stephanie"],
@@ -240,15 +235,15 @@ describe("updateIndexes", () => {
 			const transaction = storage.transact()
 			// Sibling index.
 			const index = defineIndex(transaction, {
-				index: "aunts",
+				name: "aunts",
 				filter: [
 					[
-						[id, "mom", mom],
-						[sibling, "mom", mom],
+						[id, { lit: "mom" }, mom],
+						[sibling, { lit: "mom" }, mom],
 					],
 					[
-						[id, "dad", dad],
-						[sibling, "dad", dad],
+						[id, { lit: "dad" }, dad],
+						[sibling, { lit: "dad" }, dad],
 					],
 				],
 				sort: [id, sibling],
@@ -263,7 +258,7 @@ describe("updateIndexes", () => {
 				],
 			})
 
-			assert.deepEqual(transaction.scan(index.index), [
+			assert.deepEqual(transaction.scan(index.name), [
 				["chet", "chet"],
 				["chet", "sam"],
 				["sam", "chet"],
@@ -275,7 +270,7 @@ describe("updateIndexes", () => {
 				remove: [["sam", "dad", "leon"]],
 			})
 
-			assert.deepEqual(transaction.scan(index.index), [
+			assert.deepEqual(transaction.scan(index.name), [
 				["chet", "chet"],
 				["chet", "sam"],
 				["sam", "chet"],
@@ -285,7 +280,7 @@ describe("updateIndexes", () => {
 			write(transaction, {
 				remove: [["sam", "mom", "deborah"]],
 			})
-			assert.deepEqual(transaction.scan(index.index), [
+			assert.deepEqual(transaction.scan(index.name), [
 				["chet", "chet"],
 				["sam", "sam"],
 			])
