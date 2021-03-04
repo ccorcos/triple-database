@@ -4,6 +4,9 @@ Relational queries with reactivity and incremental cache update.
 
 ## TODO
 
+useSubscribe -> useScan
+useQuery(triplestore)
+
 - use raw index listeners rather than listen key
 - how to share code for reactive queries with defineIndex
 
