@@ -15,7 +15,7 @@ import {
 	PartiallySolvedOrExpression,
 } from "./query"
 import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
-import { FactListenKey, getFactListenKey } from "./factListenerHelpers"
+import { FactListenKey, getFactListenKey } from "./factListenKeyHelpers"
 import { indexes } from "./types"
 
 export type DefineIndexArgs = {

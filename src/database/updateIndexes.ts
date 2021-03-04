@@ -6,7 +6,7 @@ import {
 	DefineIndexArgs,
 } from "./defineIndex"
 import { ReadOnlyStorage, Transaction } from "tuple-database/storage/types"
-import { generateFactListenKeys } from "./factListenerHelpers"
+import { generateFactListenKeys } from "./factListenKeyHelpers"
 import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
 import {
 	prettyExpression,

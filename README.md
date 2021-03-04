@@ -4,10 +4,8 @@ Relational queries with reactivity and incremental cache update.
 
 ## TODO
 
-- fix tests
 - cleanup
 	subscriptionHelpers?
-	triplestore?
 	factListenHelpers -- better name?
 - syntax?
 	// peopleByLastFirstName:
