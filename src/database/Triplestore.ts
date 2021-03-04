@@ -93,6 +93,10 @@ export class TriplestoreTransaction {
 		return this
 	}
 
+	scanIndex: ReactiveStorage["scan"] = (index, args) => {
+		return this.transaction.scan(index, args)
+	}
+
 	commit() {
 		this.transaction.commit()
 	}
