@@ -4,11 +4,11 @@ export { Value, Tuple }
 
 export type Fact = [Value, Value, Value]
 
-export type Operation =
+export type FactOperation =
 	| { type: "set"; fact: Fact }
 	| { type: "remove"; fact: Fact }
 
 export const indexes = {
-	indexesByName: "indexes",
-	indexersByKey: "indexers",
+	indexesByName: "db/indexes",
+	indexersByKey: "db/indexers",
 }

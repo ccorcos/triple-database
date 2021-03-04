@@ -21,17 +21,17 @@ import {
 	isVariable,
 	prettyFact,
 } from "./query"
-import { Fact, Tuple, Operation, indexes } from "./types"
+import { Fact, Tuple, FactOperation, indexes } from "./types"
 import { unreachable } from "../helpers/typeHelpers"
 
 export type UpdateIndexesPlan = {
-	operation: Operation
+	operation: FactOperation
 	indexerPlans: Array<IndexerPlan>
 }
 
 export function getUpdateIndexesPlan(
 	storage: ReadOnlyStorage,
-	operation: Operation
+	operation: FactOperation
 ) {
 	const updateIndexesPlan: UpdateIndexesPlan = {
 		operation,
@@ -60,7 +60,7 @@ export type IndexerReport = {
 }
 
 export type UpdateIndexesReport = {
-	operation: Operation
+	operation: FactOperation
 	indexerReports: Array<IndexerReport>
 }
 
@@ -142,7 +142,10 @@ export function evaluateUpdateIndexesPlan(
 	return updateIndexesReport
 }
 
-export function updateIndexes(transaction: Transaction, operation: Operation) {
+export function updateIndexes(
+	transaction: Transaction,
+	operation: FactOperation
+) {
 	return evaluateUpdateIndexesPlan(
 		transaction,
 		getUpdateIndexesPlan(transaction, operation)

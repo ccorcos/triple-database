@@ -125,7 +125,7 @@ export function prettyDefineIndexPlan(plan: DefineIndexPlan) {
 export function evaluateDefineIndexPlan(
 	transaction: Transaction,
 	plan: DefineIndexPlan
-): DefineIndexArgs {
+): DefineIndexPlan {
 	transaction.set(indexes.indexesByName, [plan.name, plan])
 	for (const indexerPlan of plan.indexerPlans) {
 		transaction.set(indexes.indexersByKey, [indexerPlan.listenKey, indexerPlan])

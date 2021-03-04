@@ -1,26 +1,17 @@
 # Triple Database
 
-Relational queries with reactivity and incremental cache update.
-
-## TODO
-
-useSubscribe -> useScan
-useQuery(triplestore)
-
-- use raw index listeners rather than listen key
-- how to share code for reactive queries with defineIndex
-
+A database for storing triples, also know as *facts* with tooling for querying and indexing.
 
 ```ts
+import * as assert from "assert"
 import sqlite from "better-sqlite3"
 import { SQLiteStorage } from "tuple-database/storage/SQLiteStorage"
-import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
+import { Triplestore } from "triple-database"
 
-const triplestore = new Triplestore(
-	new ReactiveStorage(new SQLiteStorage(sqlite("./app.db")))
-)
+const store = new Triplestore(new InMemoryStorage())
 
-triplestore.transact()
+store
+	.transact()
 	.set(["0001", "type", "Person"])
 	.set(["0001", "firstName", "Chet"])
 	.set(["0001", "lastName", "Corcos"])
@@ -29,44 +20,51 @@ triplestore.transact()
 	.set(["0002", "lastName", "Navarro"])
 	.commit()
 
-triplestore.query({
+const queryResult = store.queryFacts({
 	filter: [
-		[{var: "id"}, { lit: "type" }, { lit: "person" }],
-		[{var: "id"}, { lit: "firstName" }, {var: "firstName"}],
-		[{var: "id"}, { lit: "lastName" }, {var: "lastName"}],
+		[
+			[{ var: "id" }, { lit: "type" }, { lit: "Person" }],
+			[{ var: "id" }, { lit: "firstName" }, { var: "firstName" }],
+			[{ var: "id" }, { lit: "lastName" }, { var: "lastName" }],
+		],
 	],
+	sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],
 })
-// [{lastName: "Corcos", firstName: "Chet", id: "0001"},
-//  {lastName: "Navarro", firstName: "Meghan", id: "0002"}]
 
-triplestore.createIndex({
+assert.deepEqual(queryResult, [
+	["Corcos", "Chet", "0001"],
+	["Navarro", "Meghan", "0002"],
+])
+
+store.ensureIndex({
 	name: "personByLastFirst",
 	filter: [
 		[
-			[{var: "id"}, { lit: "type" }, { lit: "person" }],
-			[{var: "id"}, { lit: "firstName" }, {var: "firstName"}],
-			[{var: "id"}, { lit: "lastName" }, {var: "lastName"}],
+			[{ var: "id" }, { lit: "type" }, { lit: "Person" }],
+			[{ var: "id" }, { lit: "firstName" }, { var: "firstName" }],
+			[{ var: "id" }, { lit: "lastName" }, { var: "lastName" }],
 		],
 	],
-	sort: [{var: "lastName"}, {var: "firstName"}, {var: "id"}]
+	sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],
 })
 
-triplestore.scan("personByLastFirst")
-// [["Corcos",  "Chet", "0001"],
-//  ["Navarro", "Meghan", "0002"]]
-
-
-triplestore.scan()
-triplestore.subscribe()
+const scanResult = store.scanIndex("personByLastFirst")
+assert.deepEqual(scanResult, [
+	["Corcos", "Chet", "0001"],
+	["Navarro", "Meghan", "0002"],
+])
 ```
 
+## TODO
 
-
-
-
+- Reactivity for `triplestore.queryFacts` with seemless in-memory index.
+- Reuse `ListenerStorage` from `tuple-database`?
+- What to do about all the query plan stuff?
 
 - cleanup
 	subscriptionHelpers?
+	write?
+	- What aren't we using anymore?
 
 - convenient syntax:
 	// peopleByLastFirstName:
@@ -76,28 +74,9 @@ triplestore.subscribe()
 	// => [?lastName, ?firstName, ?id]
 
 - delete index?
-
-- should query ids be deterministic?
-	- yes: with some additional optimization, we could break apart every piece of a query. then there's an ontology kind of problem. The order we evaluate changes the optimizations we can make. These optimizations are like neuron connections - those that fire together wire together.
-
-- what is the lifecycle of an index?
-	- can I query without generating an index?
-	- devs
-
-	defineIndex and scan are the way to do things.
-	query just uses defineIndex and scan under the hood in memory.
-
-- {var:string} is a valid Value.
 - {and: []}, {or: []}
-- {solved: string}
-
-- use `tuple-database`
-- query
-
-This is really a triplestore... You cannot index arbitrary tuple index scans without having all permutations of those indexes to be able to back out reactive updates...
-
 
 ## Later
-- or expressions
-
+- deterministic query name
+	- query optimization
 - .scan -> .range?
