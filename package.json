@@ -1,7 +1,9 @@
 {
   "name": "triple-database",
   "version": "0.0.1",
-  "description": "A triplestore database.",
+  "description": "",
+  "repository": "github:ccorcos/triple-database",
+  "main": "./main.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
