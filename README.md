@@ -1,13 +1,71 @@
-# Tuple Indexer
+# Triple Database
 
 Relational queries with reactivity and incremental cache update.
 
 ## TODO
 
+- use raw index listeners rather than listen key
+- how to share code for reactive queries with defineIndex
+
+
+```ts
+import sqlite from "better-sqlite3"
+import { SQLiteStorage } from "tuple-database/storage/SQLiteStorage"
+import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
+
+const triplestore = new Triplestore(
+	new ReactiveStorage(new SQLiteStorage(sqlite("./app.db")))
+)
+
+triplestore.transact()
+	.set(["0001", "type", "Person"])
+	.set(["0001", "firstName", "Chet"])
+	.set(["0001", "lastName", "Corcos"])
+	.set(["0002", "type", "Person"])
+	.set(["0002", "firstName", "Meghan"])
+	.set(["0002", "lastName", "Navarro"])
+	.commit()
+
+triplestore.query({
+	filter: [
+		[{var: "id"}, { lit: "type" }, { lit: "person" }],
+		[{var: "id"}, { lit: "firstName" }, {var: "firstName"}],
+		[{var: "id"}, { lit: "lastName" }, {var: "lastName"}],
+	],
+})
+// [{lastName: "Corcos", firstName: "Chet", id: "0001"},
+//  {lastName: "Navarro", firstName: "Meghan", id: "0002"}]
+
+triplestore.createIndex({
+	name: "personByLastFirst",
+	filter: [
+		[
+			[{var: "id"}, { lit: "type" }, { lit: "person" }],
+			[{var: "id"}, { lit: "firstName" }, {var: "firstName"}],
+			[{var: "id"}, { lit: "lastName" }, {var: "lastName"}],
+		],
+	],
+	sort: [{var: "lastName"}, {var: "firstName"}, {var: "id"}]
+})
+
+triplestore.scan("personByLastFirst")
+// [["Corcos",  "Chet", "0001"],
+//  ["Navarro", "Meghan", "0002"]]
+
+
+triplestore.scan()
+triplestore.subscribe()
+```
+
+
+
+
+
+
 - cleanup
 	subscriptionHelpers?
-	factListenHelpers -- better name?
-- syntax?
+
+- convenient syntax:
 	// peopleByLastFirstName:
 	// [?id, "type", "person"]
 	// [?id, "firstName", ?firstName]
