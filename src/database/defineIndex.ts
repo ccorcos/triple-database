@@ -109,9 +109,9 @@ export function prettyRemoveIndexerPlan(indexerPlan: IndexerPlan) {
 export function prettyDefineIndexPlan(plan: DefineIndexPlan) {
 	const indexersPlan = plan.indexerPlans.map((indexerPlan) => {
 		return [
-			`INDEXER ${prettyExpression(
-				indexerPlan.args.expression
-			)} ${JSON.stringify(indexerPlan.args.index.name)}`,
+			`INDEXER ${JSON.stringify(
+				indexerPlan.args.index.name
+			)} ${prettyExpression(indexerPlan.args.expression)}`,
 			`\tSET`,
 			indentText(prettySetIndexerPlan(indexerPlan), 2),
 			`\tREMOVE`,

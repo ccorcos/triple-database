@@ -1,21 +1,21 @@
-INDEXER [{var: "id"}, "type", "person"] "2b8e6249-fa2c-4093-bdb6-92b8e012413b"
+INDEXER "person-last-first" [{var: "id"}, "type", "person"]
 	SET
-		SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
-			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+		SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
 	REMOVE
-		SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
-			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown
-INDEXER [{var: "id"}, "firstName", {var: "firstName"}] "2b8e6249-fa2c-4093-bdb6-92b8e012413b"
+		SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+INDEXER "person-last-first" [{var: "id"}, "firstName", {var: "firstName"}]
 	SET
-		SCAN eav [{var: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
 	REMOVE
-		SCAN eav [{var: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown
-INDEXER [{var: "id"}, "lastName", {var: "lastName"}] "2b8e6249-fa2c-4093-bdb6-92b8e012413b"
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+INDEXER "person-last-first" [{var: "id"}, "lastName", {var: "lastName"}]
 	SET
-		SCAN eav [{var: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
 	REMOVE
-		SCAN eav [{var: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{var: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown

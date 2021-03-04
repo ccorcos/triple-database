@@ -1,4 +1,4 @@
 SET ["XXXX", "firstName", "Joe"]
-	INDEXER [{var: "id"}, "firstName", {var: "firstName"}] "2b8e6249-fa2c-4093-bdb6-92b8e012413b"
-		SCAN eav [{var: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{var: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+	INDEXER [{var: "id"}, "firstName", {var: "firstName"}] "person-last-first"
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown

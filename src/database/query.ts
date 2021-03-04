@@ -262,7 +262,7 @@ function evaluateExpressionPlan(
 ): Array<Binding> {
 	const prefix: Tuple = plan.prefix.map((elm) => {
 		if (isLiteral(elm)) {
-			return elm
+			return elm.lit
 		} else {
 			throw new Error("Unresolved plan.\n" + JSON.stringify(plan, null, 2))
 		}
@@ -474,7 +474,7 @@ export function prettyExpression(tuple: Array<Literal | Variable | Solved>) {
 					? JSON.stringify(elm.lit)
 					: isVariable(elm)
 					? `{var: "${elm.var}"}`
-					: `{solved: "${elm.solved}"`
+					: `{solved: "${elm.solved}"}`
 			)
 			.join(", "),
 		`]`,

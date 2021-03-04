@@ -1,28 +1,28 @@
-INDEXER [{var: "id"}, "mom", {var: "mom"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+INDEXER "aunts" [{var: "id"}, "mom", {var: "mom"}]
 	SET
-		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+		SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
 	REMOVE
-		SCAN eav [{var: "mom"}, "sister", {var: "aunt"}] - 1 unknown
-			SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
-				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
-INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+INDEXER "aunts" [{var: "mom"}, "sister", {var: "aunt"}]
 	SET
-		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
+		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["mom", {var: "mom"}, {var: "id"}] - 1 unknown
-			SCAN ave ["sister", {var: "aunt"}, {var: "dad"}] - 1 unknown
-				SCAN eav [{var: "id"}, "dad", {var: "dad"}] - 0 unknown
-INDEXER [{var: "id"}, "dad", {var: "dad"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+INDEXER "aunts" [{var: "id"}, "dad", {var: "dad"}]
 	SET
-		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+		SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
 	REMOVE
-		SCAN eav [{var: "dad"}, "sister", {var: "aunt"}] - 1 unknown
-			SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
-				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
-INDEXER [{var: "dad"}, "sister", {var: "aunt"}] "061150e7-1a7a-477b-a3ef-81392e6fabd6"
+		SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+INDEXER "aunts" [{var: "dad"}, "sister", {var: "aunt"}]
 	SET
-		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
+		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["dad", {var: "dad"}, {var: "id"}] - 1 unknown
-			SCAN ave ["sister", {var: "aunt"}, {var: "mom"}] - 1 unknown
-				SCAN eav [{var: "id"}, "mom", {var: "mom"}] - 0 unknown
+		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
