@@ -80,7 +80,7 @@ export class Triplestore {
 	}
 }
 
-class TriplestoreTransaction {
+export class TriplestoreTransaction {
 	constructor(private transaction: Transaction) {}
 
 	set(fact: Fact) {
