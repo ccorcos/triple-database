@@ -1,6 +1,6 @@
 {
   "name": "triple-database",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "repository": "github:ccorcos/triple-database",
   "main": "./main.js",
