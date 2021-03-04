@@ -2,15 +2,17 @@ import { Storage, Transaction, Operation } from "tuple-database/storage/types"
 import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
 import { querySort, QuerySortArgs } from "./query"
 import { defineIndex, DefineIndexArgs, DefineIndexPlan } from "./defineIndex"
-import { Fact, indexes } from "./types"
+import { Fact, FactOperation, indexes } from "./types"
 import _ from "lodash"
 import { populateIndex } from "./populateIndex"
 import { updateIndexes } from "./updateIndexes"
 
+export type FactIndexer = (tx: Transaction, op: FactOperation) => void
+
 export class Triplestore {
 	private storage: ReactiveStorage
 
-	constructor(storage: Storage) {
+	constructor(storage: Storage, private indexers: Array<FactIndexer> = []) {
 		this.storage = new ReactiveStorage(storage, [this.factIndexer])
 	}
 
@@ -20,7 +22,11 @@ export class Triplestore {
 			tx[op.type]("ave", [a, v, e])
 			tx[op.type]("vea", [v, e, a])
 			tx[op.type]("vae", [v, a, e])
-			updateIndexes(tx, { type: op.type, fact: [e, a, v] })
+			const factOp: FactOperation = { type: op.type, fact: [e, a, v] }
+			updateIndexes(tx, factOp)
+			for (const indexer of this.indexers) {
+				indexer(tx, factOp)
+			}
 		}
 	}
 
