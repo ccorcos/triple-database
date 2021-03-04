@@ -1,7 +1,7 @@
 {
-  "name": "notes",
-  "version": "1.0.0",
-  "description": "A notes app.",
+  "name": "triple-database",
+  "version": "0.0.1",
+  "description": "A triplestore database.",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
