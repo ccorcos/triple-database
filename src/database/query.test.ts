@@ -1,21 +1,18 @@
-import { describe, it } from "mocha"
 import * as assert from "assert"
-import { createContactsDb, createFamilyDb } from "../test/fixtures"
-import * as _ from "lodash"
-import {
-	querySort,
-	prettyOrExpressionPlan,
-	getOrExpressionPlan,
-	evaluateOrExpressionPlan,
-	prettyOrExpressionReport,
-	query,
-	Expression,
-	Binding,
-} from "./query"
-import { snapshotTest } from "../test/snapshotTest"
-import { write } from "./write"
-import { bindingsEqual } from "../test/bindingsEqual"
+import { describe, it } from "mocha"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
+import { bindingsEqual } from "../test/bindingsEqual"
+import { createContactsDb, createFamilyDb } from "../test/fixtures"
+import { snapshotTest } from "../test/snapshotTest"
+import {
+	Binding,
+	Expression,
+	getOrExpressionPlan,
+	prettyOrExpressionPlan,
+	query,
+	querySort,
+} from "./query"
+import { write } from "./write"
 
 const id = { var: "id" }
 const firstName = { var: "firstName" }

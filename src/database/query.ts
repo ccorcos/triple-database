@@ -1,9 +1,9 @@
-import { ReadOnlyStorage, ScanArgs } from "tuple-database/storage/types"
+import { flatten } from "lodash"
 import { compareTuple } from "tuple-database/helpers/compareTuple"
 import { scan } from "tuple-database/helpers/sortedTupleArray"
-import { flatten } from "lodash"
+import { ReadOnlyStorage, ScanArgs } from "tuple-database/storage/types"
 import { indentCascade, indentText } from "../helpers/printHelpers"
-import { Tuple, Value, Fact } from "./types"
+import { Fact, Tuple, Value } from "./types"
 
 export type Variable = { var: string }
 export type Literal = { lit: Value }
@@ -430,10 +430,14 @@ export function querySort(storage: ReadOnlyStorage, args: QuerySortArgs) {
 	return { data, report }
 }
 
-export function query(
-	storage: ReadOnlyStorage,
-	args: { filter: OrExpression; bind?: Binding }
-) {
+export type QueryArgs = {
+	// Bind(Expression): Expression
+	bind?: Binding
+	// Filter(Expression): Bindings
+	filter: OrExpression
+}
+
+export function query(storage: ReadOnlyStorage, args: QueryArgs) {
 	return evaluateOrExpressionPlan(
 		storage,
 		getOrExpressionPlan(args.filter, args.bind || {})

@@ -1,5 +1,5 @@
-import { describe, it } from "mocha"
 import * as assert from "assert"
+import { describe, it } from "mocha"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "./Triplestore"
 
@@ -49,6 +49,28 @@ describe("Triplestore", () => {
 		assert.deepEqual(scanResult, [
 			["Corcos", "Chet", "0001"],
 			["Navarro", "Meghan", "0002"],
+		])
+	})
+
+	it("Handles arbitrary classes", () => {
+		const store = new Triplestore(new InMemoryStorage())
+
+		class AnyObject {}
+
+		const obj = new AnyObject()
+		store
+			.transact()
+			.set([1, "something", 2])
+			.set([1, "something", obj])
+			.commit()
+
+		const queryResult = store.query({
+			filter: [[[{ var: "id" }, { lit: "something" }, { var: "something" }]]],
+		})
+
+		assert.deepEqual(queryResult, [
+			{ id: 1, something: obj },
+			{ id: 1, something: 2 },
 		])
 	})
 })

@@ -1,10 +1,10 @@
-import { Storage, Transaction, Operation } from "tuple-database/storage/types"
-import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
-import { querySort, QuerySortArgs } from "./query"
-import { defineIndex, DefineIndexArgs, DefineIndexPlan } from "./defineIndex"
-import { Fact, FactOperation, indexes } from "./types"
 import _ from "lodash"
+import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
+import { Operation, Storage, Transaction } from "tuple-database/storage/types"
+import { defineIndex, DefineIndexArgs, DefineIndexPlan } from "./defineIndex"
 import { populateIndex } from "./populateIndex"
+import { query, QueryArgs, querySort, QuerySortArgs } from "./query"
+import { Fact, FactOperation, indexes } from "./types"
 import { updateIndexes } from "./updateIndexes"
 
 export type FactIndexer = (tx: Transaction, op: FactOperation) => void
@@ -42,6 +42,12 @@ export class Triplestore {
 		const { data } = querySort(this.storage, args)
 		return data
 	}
+
+	query(args: QueryArgs) {
+		const { bindings } = query(this.storage, args)
+		return bindings
+	}
+
 	// subscribeFacts // This is just creating an index and subscribing to the result.
 
 	ensureIndex(args: DefineIndexArgs) {

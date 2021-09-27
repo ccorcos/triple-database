@@ -4,8 +4,7 @@ A database for storing triples, also know as *facts* with tooling for querying a
 
 ```ts
 import * as assert from "assert"
-import sqlite from "better-sqlite3"
-import { SQLiteStorage } from "tuple-database/storage/SQLiteStorage"
+import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "triple-database"
 
 const store = new Triplestore(new InMemoryStorage())
@@ -56,6 +55,10 @@ assert.deepEqual(scanResult, [
 ```
 
 ## TODO
+
+- test that we can put arbitrary class objects in here.
+- convenient `$()` syntax for defining variables.
+- send tuples back and forth between a database in two different processes using traces and transactions.
 
 - Reactivity for `triplestore.queryFacts` with seemless in-memory index.
 - Reuse `ListenerStorage` from `tuple-database`?
