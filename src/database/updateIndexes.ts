@@ -1,4 +1,5 @@
 import * as _ from "lodash"
+import { pick } from "lodash"
 import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
 import { getIndentOfLastLine, indentText } from "../helpers/printHelpers"
 import { unreachable } from "../helpers/typeHelpers"
@@ -13,8 +14,10 @@ import {
 	AndExpressionReport,
 	Binding,
 	evaluateAndExpressionPlan,
+	evaluateOrExpressionPlan,
 	Expression,
 	getAndExpressionPlan,
+	getOrExpressionPlan,
 	isVariable,
 	OrExpressionReport,
 	prettyAndExpressionReport,
@@ -109,21 +112,42 @@ export function evaluateUpdateIndexesPlan(
 				transaction.set([index.name, ...tuple], null)
 				indexerReport.write.set.push(tuple)
 			} else if (operation.type === "remove") {
-				// If we're removing, we need to check that this tuple doesn't satisfy any
-				// of the other AndExpressions in the Or.
-				let existsInOtherExpression = false
-				for (const andExpression of restOrExpression) {
-					const { bindings: result, report } = evaluateAndExpressionPlan(
-						transaction,
-						getAndExpressionPlan(andExpression, fullBinding)
-					)
-					indexerReport.restOrExpressionReport.push(report)
-					existsInOtherExpression = result.length > 0
-					if (existsInOtherExpression) {
-						break
-					}
-				}
-				if (!existsInOtherExpression) {
+				// If we're removing, we need to check that this tuple doesn't satisfy based
+				// on a different trace or different one of the OR expressions
+				//
+				// Example 1:
+				// Maybe there are two ways of getting the same output tuple such as a
+				// friend-of-a-friend index:
+				// 		[?a, friend, ?b], [?b, friend, ?c] => [?a, ?c]
+				// There might be two ways of having a friend of a friend:
+				// 		[a, friend, b]
+				// 		[b, friend, x]
+				// 		[a, friend, c]
+				// 		[c, friend, x]
+				// So we need to bind ?a and ?c and check that its still untrue
+				//
+				// Example 2:
+				// There might be two ways via another expression in an OR query.
+				// 		[?a, mom?, ?m], [?m, brother, ?uncle]
+				// 		OR [?a, dad?, ?d], [?d, brother, ?uncle]
+				//    => [?a, ?uncle]
+				//
+				// TODO: We can avoid re-querying right here if every tuple generated in the
+				// index has all variables as well as the AndExpression that it came from.
+				// It's still unclear if we want to do this or not.
+				const indexBinding = pick(
+					fullBinding,
+					index.sort.map((x) => x.var)
+				)
+
+				// TODO: this report doesn't end up in the parent report.
+				// NOTE: we can also filter out the trace for the tuple we're removing.
+				const result = evaluateOrExpressionPlan(
+					transaction,
+					getOrExpressionPlan(index.filter, indexBinding)
+				)
+
+				if (result.bindings.length === 0) {
 					transaction.remove([index.name, ...tuple])
 					indexerReport.write.remove.push(tuple)
 				}

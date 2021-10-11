@@ -5,7 +5,6 @@ Let's do a whole run through and clean this thing up.
 
 
 
-
 - defineIndex can use the value, not just the key
 
 

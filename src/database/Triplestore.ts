@@ -4,6 +4,12 @@ import { Transaction, TupleStorage } from "tuple-database/storage/types"
 import { defineIndex, DefineIndexArgs, DefineIndexPlan } from "./defineIndex"
 import { populateIndex } from "./populateIndex"
 import { query, QueryArgs, querySort, QuerySortArgs } from "./query"
+import {
+	IndexWrites,
+	scanIndex,
+	ScanIndexArgs,
+	subscribeIndex,
+} from "./scanIndex"
 import { Fact, FactOperation, indexes } from "./types"
 import { updateIndexes } from "./updateIndexes"
 
@@ -37,12 +43,15 @@ export class Triplestore {
 		})
 	}
 
-	scanIndex: ReactiveStorage["scan"] = (args = {}) => {
-		return this.storage.scan(args)
+	scanIndex = (args: ScanIndexArgs) => {
+		return scanIndex(this.storage, args)
 	}
 
-	subscribeIndex: ReactiveStorage["subscribe"] = (args, callback) => {
-		return this.storage.subscribe(args, callback)
+	subscribeIndex = (
+		args: ScanIndexArgs,
+		callback: (writes: IndexWrites) => void
+	) => {
+		return subscribeIndex(this.storage, args, callback)
 	}
 
 	queryFacts(args: QuerySortArgs) {

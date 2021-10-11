@@ -8,12 +8,9 @@ import {
 
 type WriteReport = Array<UpdateIndexesReport>
 
-export type WriteArgs = { set?: Array<Fact>; remove?: Array<Fact> }
+export type FactWrites = { set?: Array<Fact>; remove?: Array<Fact> }
 
-export function write(
-	transaction: Transaction,
-	args: { set?: Array<Fact>; remove?: Array<Fact> }
-): WriteReport {
+export function write(transaction: Transaction, args: FactWrites): WriteReport {
 	const writeReport: WriteReport = []
 
 	if (args.set) {

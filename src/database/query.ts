@@ -406,12 +406,9 @@ export type QuerySortArgs = {
 }
 
 export function querySort(storage: ReadOnlyTupleStorage, args: QuerySortArgs) {
-	const { filter: orExpression, sort, scan: scanArgs, bind } = args
+	const { filter, bind, sort, scan: scanArgs } = args
 
-	const { report, bindings } = evaluateOrExpressionPlan(
-		storage,
-		getOrExpressionPlan(orExpression, bind || {})
-	)
+	const { report, bindings } = query(storage, { filter, bind })
 
 	// Sorted tuples in memory.
 	const tuples = bindings.map((binding) => {

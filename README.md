@@ -22,9 +22,9 @@ store
 const queryResult = store.queryFacts({
 	filter: [
 		[
-			[{ var: "id" }, { lit: "type" }, { lit: "Person" }],
-			[{ var: "id" }, { lit: "firstName" }, { var: "firstName" }],
-			[{ var: "id" }, { lit: "lastName" }, { var: "lastName" }],
+			[{ var: "id" }, { value: "type" }, { value: "Person" }],
+			[{ var: "id" }, { value: "firstName" }, { var: "firstName" }],
+			[{ var: "id" }, { value: "lastName" }, { var: "lastName" }],
 		],
 	],
 	sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],
@@ -39,9 +39,9 @@ store.ensureIndex({
 	name: "personByLastFirst",
 	filter: [
 		[
-			[{ var: "id" }, { lit: "type" }, { lit: "Person" }],
-			[{ var: "id" }, { lit: "firstName" }, { var: "firstName" }],
-			[{ var: "id" }, { lit: "lastName" }, { var: "lastName" }],
+			[{ var: "id" }, { value: "type" }, { value: "Person" }],
+			[{ var: "id" }, { value: "firstName" }, { var: "firstName" }],
+			[{ var: "id" }, { value: "lastName" }, { var: "lastName" }],
 		],
 	],
 	sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],

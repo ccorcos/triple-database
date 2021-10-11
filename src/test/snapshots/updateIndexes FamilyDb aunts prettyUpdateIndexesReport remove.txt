@@ -5,5 +5,3 @@ REMOVE ["deborah", "sister", "melanie"]
 	INDEXER [{var: "mom"}, "sister", {var: "aunt"}] "aunts"
 		BIND {mom: "deborah", aunt: "melanie"}
 			SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown, 1 evaluations, 2 results
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown, 2 evaluations, 1 results
-					SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown, 1 evaluations, 0 results

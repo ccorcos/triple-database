@@ -4,7 +4,7 @@ import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "./Triplestore"
 
 describe("Triplestore", () => {
-	it("Works1", () => {
+	it("Works", () => {
 		const store = new Triplestore(new InMemoryStorage())
 
 		store
@@ -45,11 +45,93 @@ describe("Triplestore", () => {
 			sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],
 		})
 
-		const scanResult = store.scanIndex({ prefix: ["personByLastFirst"] })
+		const scanResult = store.scanIndex({ index: "personByLastFirst" })
 		assert.deepEqual(scanResult, [
-			[["personByLastFirst", "Corcos", "Chet", "0001"], null],
-			[["personByLastFirst", "Navarro", "Meghan", "0002"], null],
+			["Corcos", "Chet", "0001"],
+			["Navarro", "Meghan", "0002"],
 		])
+	})
+
+	it("Indexing will not remove if redundant value", () => {
+		const store = new Triplestore(new InMemoryStorage())
+
+		store
+			.transact()
+			.set(["a", "follows", "b"])
+			.set(["b", "follows", "x"])
+			.set(["a", "follows", "c"])
+			.set(["c", "follows", "x"])
+			.commit()
+
+		store.ensureIndex({
+			name: "fof", // follows of follows
+			filter: [
+				[
+					[{ var: "a" }, { value: "follows" }, { var: "b" }],
+					[{ var: "b" }, { value: "follows" }, { var: "c" }],
+				],
+			],
+			sort: [{ var: "a" }, { var: "c" }],
+		})
+
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [["a", "x"]])
+
+		// Add an additional follow
+		store.transact().set(["c", "follows", "y"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [
+			["a", "x"],
+			["a", "y"],
+		])
+
+		// Still follows x due to a -> b -> x relationship.
+		store.transact().remove(["a", "follows", "c"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [["a", "x"]])
+
+		store.transact().remove(["b", "follows", "x"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [])
+	})
+
+	it("Indexing will not remove if redundant value with fully defined sort", () => {
+		const store = new Triplestore(new InMemoryStorage())
+
+		store
+			.transact()
+			.set(["a", "follows", "b"])
+			.set(["b", "follows", "x"])
+			.set(["a", "follows", "c"])
+			.set(["c", "follows", "x"])
+			.commit()
+
+		store.ensureIndex({
+			name: "fof", // follows of follows
+			filter: [
+				[
+					[{ var: "a" }, { value: "follows" }, { var: "b" }],
+					[{ var: "b" }, { value: "follows" }, { var: "c" }],
+				],
+			],
+			sort: [{ var: "a" }, { var: "c" }, { var: "b" }],
+		})
+
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [
+			["a", "x", "b"],
+			["a", "x", "c"],
+		])
+
+		// Add an additional follow
+		store.transact().set(["c", "follows", "y"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [
+			["a", "x", "b"],
+			["a", "x", "c"],
+			["a", "y", "c"],
+		])
+
+		// Still follows x due to a -> b -> x relationship.
+		store.transact().remove(["a", "follows", "c"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [["a", "x", "b"]])
+
+		store.transact().remove(["b", "follows", "x"]).commit()
+		assert.deepEqual(store.scanIndex({ index: "fof" }), [])
 	})
 
 	it("Handles arbitrary classes", () => {
