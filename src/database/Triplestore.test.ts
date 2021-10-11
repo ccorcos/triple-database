@@ -1,11 +1,10 @@
 import { strict as assert } from "assert"
 import { describe, it } from "mocha"
-import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "./Triplestore"
 
 describe("Triplestore", () => {
 	it("Works", () => {
-		const store = new Triplestore(new InMemoryStorage())
+		const store = new Triplestore()
 
 		store
 			.transact()
@@ -17,7 +16,7 @@ describe("Triplestore", () => {
 			.set(["0002", "lastName", "Navarro"])
 			.commit()
 
-		const queryResult = store.queryFacts({
+		const queryResult = store.querySort({
 			filter: [
 				[
 					[{ var: "id" }, { value: "type" }, { value: "Person" }],
@@ -53,7 +52,7 @@ describe("Triplestore", () => {
 	})
 
 	it("Indexing will not remove if redundant value", () => {
-		const store = new Triplestore(new InMemoryStorage())
+		const store = new Triplestore()
 
 		store
 			.transact()
@@ -92,7 +91,7 @@ describe("Triplestore", () => {
 	})
 
 	it("Indexing will not remove if redundant value with fully defined sort", () => {
-		const store = new Triplestore(new InMemoryStorage())
+		const store = new Triplestore()
 
 		store
 			.transact()
@@ -135,7 +134,7 @@ describe("Triplestore", () => {
 	})
 
 	it("Handles arbitrary classes", () => {
-		const store = new Triplestore(new InMemoryStorage())
+		const store = new Triplestore()
 
 		class AnyObject {}
 

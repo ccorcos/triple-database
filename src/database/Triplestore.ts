@@ -1,6 +1,7 @@
 import _ from "lodash"
+import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
-import { Transaction, TupleStorage } from "tuple-database/storage/types"
+import { Transaction } from "tuple-database/storage/types"
 import { defineIndex, DefineIndexArgs, DefineIndexPlan } from "./defineIndex"
 import { populateIndex } from "./populateIndex"
 import { query, QueryArgs, querySort, QuerySortArgs } from "./query"
@@ -11,36 +12,26 @@ import {
 	subscribeIndex,
 } from "./scanIndex"
 import { Fact, FactOperation, indexes } from "./types"
-import { updateIndexes } from "./updateIndexes"
+import { write } from "./write"
 
 export type FactIndexer = (tx: Transaction, op: FactOperation) => void
 
 export class Triplestore {
-	private storage: ReactiveStorage
+	public storage: ReactiveStorage
 
-	constructor(
-		storage: TupleStorage,
-		private indexers: Array<FactIndexer> = []
-	) {
-		this.storage = new ReactiveStorage(storage)
-		this.storage.index((tx, op) => {
-			if (op.tuple[0] !== "eav") return
-			const [_indexName, e, a, v] = op.tuple
-			if (op.type === "set") {
-				tx.set(["ave", a, v, e], null)
-				tx.set(["vea", v, e, a], null)
-				tx.set(["vae", v, a, e], null)
-			} else {
-				tx.remove(["ave", a, v, e])
-				tx.remove(["vea", v, e, a])
-				tx.remove(["vae", v, a, e])
-			}
-			const factOp: FactOperation = { type: op.type, fact: [e, a, v] }
-			updateIndexes(tx, factOp)
-			for (const indexer of this.indexers) {
-				indexer(tx, factOp)
-			}
-		})
+	constructor(storage?: ReactiveStorage) {
+		if (storage) this.storage = storage
+		else this.storage = new ReactiveStorage(new InMemoryStorage())
+	}
+
+	query(args: QueryArgs) {
+		const { bindings } = query(this.storage, args)
+		return bindings
+	}
+
+	querySort(args: QuerySortArgs) {
+		const { data } = querySort(this.storage, args)
+		return data
 	}
 
 	scanIndex = (args: ScanIndexArgs) => {
@@ -53,18 +44,6 @@ export class Triplestore {
 	) => {
 		return subscribeIndex(this.storage, args, callback)
 	}
-
-	queryFacts(args: QuerySortArgs) {
-		const { data } = querySort(this.storage, args)
-		return data
-	}
-
-	query(args: QueryArgs) {
-		const { bindings } = query(this.storage, args)
-		return bindings
-	}
-
-	// subscribeFacts // This is just creating an index and subscribing to the result.
 
 	ensureIndex(args: DefineIndexArgs) {
 		const result = this.storage
@@ -104,17 +83,27 @@ export class TriplestoreTransaction {
 	constructor(private transaction: Transaction) {}
 
 	set(fact: Fact) {
-		this.transaction.set(["eav", ...fact], null)
+		write(this.transaction, { set: [fact] })
 		return this
 	}
 
 	remove(fact: Fact) {
-		this.transaction.remove(["eav", ...fact])
+		write(this.transaction, { remove: [fact] })
 		return this
 	}
 
-	scanIndex: ReactiveStorage["scan"] = (args) => {
-		return this.transaction.scan(args)
+	scanIndex = (args: ScanIndexArgs) => {
+		return scanIndex(this.transaction, args)
+	}
+
+	queryFacts(args: QuerySortArgs) {
+		const { data } = querySort(this.transaction, args)
+		return data
+	}
+
+	query(args: QueryArgs) {
+		const { bindings } = query(this.transaction, args)
+		return bindings
 	}
 
 	commit() {
