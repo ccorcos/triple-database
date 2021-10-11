@@ -6,9 +6,11 @@ import { createContactsDb, createFamilyDb } from "../test/fixtures"
 import { snapshotTest } from "../test/snapshotTest"
 import {
 	Binding,
+	evaluateOrExpressionPlan,
 	Expression,
 	getOrExpressionPlan,
 	prettyOrExpressionPlan,
+	prettyOrExpressionReport,
 	query,
 	querySort,
 } from "./query"
@@ -126,20 +128,20 @@ describe("query", () => {
 			return prettyOrExpressionPlan(plan)
 		})
 
-		// snapshotTest("prettyOrExpressionReport", () => {
-		// 	const storage = createContactsDb()
-		// 	const { report } = evaluateOrExpressionPlan(
-		// 		storage,
-		// 		getOrExpressionPlan([
-		// 			[
-		// 				[id, {lit: "type"}, {lit: "person"}],
-		// 				[id, {lit: "firstName"}, firstName],
-		// 				[id, {lit:"lastName"}, lastName],
-		// 			],
-		// 		])
-		// 	)
-		// 	return prettyOrExpressionReport(report)
-		// })
+		snapshotTest("prettyOrExpressionReport", () => {
+			const storage = createContactsDb()
+			const { report } = evaluateOrExpressionPlan(
+				storage,
+				getOrExpressionPlan([
+					[
+						[id, { lit: "type" }, { lit: "person" }],
+						[id, { lit: "firstName" }, firstName],
+						[id, { lit: "lastName" }, lastName],
+					],
+				])
+			)
+			return prettyOrExpressionReport(report)
+		})
 	})
 
 	describe("FamilyDb", () => {

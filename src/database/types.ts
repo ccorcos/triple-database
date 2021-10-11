@@ -1,4 +1,4 @@
-import { Value, Tuple } from "tuple-database/storage/types"
+import { Tuple, Value } from "tuple-database/storage/types"
 
 export { Value, Tuple }
 

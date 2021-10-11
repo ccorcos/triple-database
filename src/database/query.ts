@@ -59,8 +59,6 @@ export type ExpressionPlan = {
 	index: string
 	prefix: Array<Literal | Solved>
 	unknowns: Array<Variable>
-	// Data is saved in the database as:
-	// index: [...prefix, ...unknowns]
 }
 
 export function getExpressionPlan(
