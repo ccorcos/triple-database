@@ -54,19 +54,17 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 					unknownsInExpression
 				)
 
-				// Upon solving the entire andExpression, if we are removing a record from the
-				// index, we need to check the rest of the orExpression to make sure that the
-				// same result isn't redundant from the other queries.
-				const unknownsInAndExpression = getUnknownsInAndExpression(
-					andExpression
-				)
+				// Upon solving the andExpression, if we are removing a tuple from the index,
+				// we need to check the rest of the orExpression to make sure that the same result
+				// isn't redundant from the other traces.
 				const restOrExpression = orExpression
-					.filter((otherAndExpression) => otherAndExpression !== andExpression)
-					.map((otherAndExpression) =>
-						resolveUnknownsInAndExpression(
-							otherAndExpression,
-							unknownsInAndExpression
-						)
+					.filter((otherAndExpression) =>
+						otherAndExpression === andExpression
+							? restAndExpression
+							: otherAndExpression
+					)
+					.map((andExpression) =>
+						resolveUnknownsInAndExpression(andExpression, index.sort)
 					)
 
 				const indexerPlan: IndexerPlan = {

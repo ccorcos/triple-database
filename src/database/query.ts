@@ -246,7 +246,7 @@ export function resolveUnknownsInExpression(
 export type OrExpressionPlan = Array<AndExpressionPlan>
 
 export function getOrExpressionPlan(
-	orExpression: OrExpression,
+	orExpression: PartiallySolvedOrExpression,
 	bind: Binding = {}
 ): OrExpressionPlan {
 	return orExpression.map((andExpression) =>

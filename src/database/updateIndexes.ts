@@ -144,7 +144,7 @@ export function evaluateUpdateIndexesPlan(
 				// NOTE: we can also filter out the trace for the tuple we're removing.
 				const result = evaluateOrExpressionPlan(
 					transaction,
-					getOrExpressionPlan(index.filter, indexBinding)
+					getOrExpressionPlan(restOrExpression, indexBinding)
 				)
 
 				if (result.bindings.length === 0) {
