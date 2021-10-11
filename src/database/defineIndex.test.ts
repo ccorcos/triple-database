@@ -1,7 +1,6 @@
 import { describe } from "mocha"
-import * as _ from "lodash"
-import { prettyDefineIndexPlan, getDefineIndexPlan } from "./defineIndex"
 import { snapshotTest } from "../test/snapshotTest"
+import { getDefineIndexPlan, prettyDefineIndexPlan } from "./defineIndex"
 
 const id = { var: "id" }
 const firstName = { var: "firstName" }
@@ -19,9 +18,9 @@ describe("defineIndex", () => {
 				name: "person-last-first",
 				filter: [
 					[
-						[id, { lit: "type" }, { lit: "person" }],
-						[id, { lit: "firstName" }, firstName],
-						[id, { lit: "lastName" }, lastName],
+						[id, { value: "type" }, { value: "person" }],
+						[id, { value: "firstName" }, firstName],
+						[id, { value: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -37,12 +36,12 @@ describe("defineIndex", () => {
 					name: "aunts",
 					filter: [
 						[
-							[id, { lit: "mom" }, mom],
-							[mom, { lit: "sister" }, aunt],
+							[id, { value: "mom" }, mom],
+							[mom, { value: "sister" }, aunt],
 						],
 						[
-							[id, { lit: "dad" }, dad],
-							[dad, { lit: "sister" }, aunt],
+							[id, { value: "dad" }, dad],
+							[dad, { value: "sister" }, aunt],
 						],
 					],
 					sort: [aunt, id],
@@ -57,24 +56,24 @@ describe("defineIndex", () => {
 					name: "cousins",
 					filter: [
 						[
-							[id, { lit: "mom" }, mom],
-							[mom, { lit: "sister" }, aunt],
-							[cousin, { lit: "mom" }, aunt],
+							[id, { value: "mom" }, mom],
+							[mom, { value: "sister" }, aunt],
+							[cousin, { value: "mom" }, aunt],
 						],
 						[
-							[id, { lit: "mom" }, mom],
-							[mom, { lit: "brother" }, uncle],
-							[cousin, { lit: "dad" }, uncle],
+							[id, { value: "mom" }, mom],
+							[mom, { value: "brother" }, uncle],
+							[cousin, { value: "dad" }, uncle],
 						],
 						[
-							[id, { lit: "dad" }, dad],
-							[dad, { lit: "sister" }, aunt],
-							[cousin, { lit: "mom" }, aunt],
+							[id, { value: "dad" }, dad],
+							[dad, { value: "sister" }, aunt],
+							[cousin, { value: "mom" }, aunt],
 						],
 						[
-							[id, { lit: "dad" }, dad],
-							[dad, { lit: "brother" }, uncle],
-							[cousin, { lit: "dad" }, uncle],
+							[id, { value: "dad" }, dad],
+							[dad, { value: "brother" }, uncle],
+							[cousin, { value: "dad" }, uncle],
 						],
 					],
 					sort: [cousin, id],

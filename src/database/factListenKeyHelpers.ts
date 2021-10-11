@@ -27,9 +27,9 @@ export function generateFactListenKeys(fact: Fact) {
 		for (const attribute of [true, false]) {
 			for (const value of [true, false]) {
 				listenKeys.push([
-					entity ? { lit: fact[0] } : wildcard,
-					attribute ? { lit: fact[1] } : wildcard,
-					value ? { lit: fact[2] } : wildcard,
+					entity ? { value: fact[0] } : wildcard,
+					attribute ? { value: fact[1] } : wildcard,
+					value ? { value: fact[2] } : wildcard,
 				])
 			}
 		}

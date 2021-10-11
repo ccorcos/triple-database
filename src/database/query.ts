@@ -6,14 +6,14 @@ import { indentCascade, indentText } from "../helpers/printHelpers"
 import { Fact, Tuple, Value } from "./types"
 
 export type Variable = { var: string }
-export type Literal = { lit: Value }
+export type Literal = { value: Value }
 
 export function isVariable(x: any): x is Variable {
 	return Boolean(x && typeof x === "object" && "var" in x)
 }
 
 export function isLiteral(x: any): x is Literal {
-	return Boolean(x && typeof x === "object" && "lit" in x)
+	return Boolean(x && typeof x === "object" && "value" in x)
 }
 
 /**
@@ -260,7 +260,7 @@ function evaluateExpressionPlan(
 ): Array<Binding> {
 	const prefix: Tuple = plan.prefix.map((elm) => {
 		if (isLiteral(elm)) {
-			return elm.lit
+			return elm.value
 		} else {
 			throw new Error("Unresolved plan.\n" + JSON.stringify(plan, null, 2))
 		}
@@ -363,7 +363,7 @@ export function resolveBindingInExpressionPlan(
 		...rest,
 		prefix: prefix.map((elm) => {
 			if (isSolved(elm) && elm.solved in binding) {
-				return { lit: binding[elm.solved] }
+				return { value: binding[elm.solved] }
 			} else {
 				return elm
 			}
@@ -464,7 +464,7 @@ function prettyExpressionPlan(plan: ExpressionPlan): string {
 }
 
 export function prettyFact(tuple: Array<Value>) {
-	return prettyExpression(tuple.map((value) => ({ lit: value })))
+	return prettyExpression(tuple.map((value) => ({ value })))
 }
 
 export function prettyExpression(tuple: Array<Literal | Variable | Solved>) {
@@ -473,7 +473,7 @@ export function prettyExpression(tuple: Array<Literal | Variable | Solved>) {
 		tuple
 			.map((elm) =>
 				isLiteral(elm)
-					? JSON.stringify(elm.lit)
+					? JSON.stringify(elm.value)
 					: isVariable(elm)
 					? `{var: "${elm.var}"}`
 					: `{solved: "${elm.solved}"}`
@@ -540,7 +540,7 @@ function expresionToFact(expression: Expression): Fact {
 
 	const values = expression.map((item) => {
 		if (isLiteral(item)) {
-			return item.lit
+			return item.value
 		} else {
 			throw new Error(
 				"Could not resolve expression: " + JSON.stringify({ expression, item })
@@ -568,7 +568,7 @@ export function resolveBindingInExpression(
 			return elm
 		}
 		if (elm.var in binding) {
-			return { lit: binding[elm.var] }
+			return { value: binding[elm.var] }
 		}
 		return elm
 	})

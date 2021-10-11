@@ -24,9 +24,9 @@ describe("populateIndex", () => {
 				name: "person-last-first",
 				filter: [
 					[
-						[id, { lit: "type" }, { lit: "person" }],
-						[id, { lit: "firstName" }, firstName],
-						[id, { lit: "lastName" }, lastName],
+						[id, { value: "type" }, { value: "person" }],
+						[id, { value: "firstName" }, firstName],
+						[id, { value: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -42,9 +42,9 @@ describe("populateIndex", () => {
 				name: "person-last-first",
 				filter: [
 					[
-						[id, { lit: "type" }, { lit: "person" }],
-						[id, { lit: "firstName" }, firstName],
-						[id, { lit: "lastName" }, lastName],
+						[id, { value: "type" }, { value: "person" }],
+						[id, { value: "firstName" }, firstName],
+						[id, { value: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -60,9 +60,9 @@ describe("populateIndex", () => {
 				name: "person-last-first",
 				filter: [
 					[
-						[id, { lit: "type" }, { lit: "person" }],
-						[id, { lit: "firstName" }, firstName],
-						[id, { lit: "lastName" }, lastName],
+						[id, { value: "type" }, { value: "person" }],
+						[id, { value: "firstName" }, firstName],
+						[id, { value: "lastName" }, lastName],
 					],
 				],
 				sort: [lastName, firstName, id],
@@ -92,12 +92,12 @@ describe("populateIndex", () => {
 					name: "aunts",
 					filter: [
 						[
-							[id, { lit: "mom" }, mom],
-							[mom, { lit: "sister" }, aunt],
+							[id, { value: "mom" }, mom],
+							[mom, { value: "sister" }, aunt],
 						],
 						[
-							[id, { lit: "dad" }, dad],
-							[dad, { lit: "sister" }, aunt],
+							[id, { value: "dad" }, dad],
+							[dad, { value: "sister" }, aunt],
 						],
 					],
 					sort: [id, aunt],
