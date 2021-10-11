@@ -1,17 +1,19 @@
 import * as _ from "lodash"
 import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
-import { getIndentOfLastLine, indentText } from "../helpers/printHelpers"
+import { indentText } from "../helpers/printHelpers"
 import { getFactListenKey } from "./factListenKeyHelpers"
 import {
 	AndExpression,
 	Expression,
 	getAndExpressionPlan,
+	getOrExpressionPlan,
 	isVariable,
 	OrExpression,
 	PartiallySolvedAndExpression,
 	PartiallySolvedOrExpression,
 	prettyAndExpressionPlan,
 	prettyExpression,
+	prettyOrExpressionPlan,
 	resolveUnknownsInAndExpression,
 	Sort,
 	Variable,
@@ -56,6 +58,8 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 				// isn't redundant from the other traces.
 				const restOrExpression = orExpression
 					.filter((otherAndExpression) =>
+						// We want to keep the restAndExpression in case there's a redundant trace within the
+						// same AndExpression. For example, a redundant friend-of-a-friend.
 						otherAndExpression === andExpression
 							? restAndExpression
 							: otherAndExpression
@@ -84,18 +88,7 @@ export function prettySetIndexerPlan(indexerPlan: IndexerPlan) {
 
 export function prettyRemoveIndexerPlan(indexerPlan: IndexerPlan) {
 	const { restOrExpression } = indexerPlan
-	const andPlan = prettySetIndexerPlan(indexerPlan)
-	if (restOrExpression.length === 0) {
-		return andPlan
-	}
-	const orPlan = restOrExpression
-		.map((andExpression) =>
-			prettyAndExpressionPlan(getAndExpressionPlan(andExpression))
-		)
-		.join("\n")
-	return [andPlan, indentText(orPlan, getIndentOfLastLine(andPlan) + 1)].join(
-		"\n"
-	)
+	return prettyOrExpressionPlan(getOrExpressionPlan(restOrExpression))
 }
 
 export function prettyDefineIndexPlan(plan: DefineIndexPlan) {

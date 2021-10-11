@@ -3,190 +3,202 @@ INDEXER "cousins" [{var: "id"}, "mom", {var: "mom"}]
 		SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
 			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
-			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "mom"}, "sister", {var: "aunt"}]
 	SET
 		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
 			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
-			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "cousin"}, "mom", {var: "aunt"}]
 	SET
 		SCAN ave ["sister", {solved: "aunt"}, {var: "mom"}] - 1 unknown
 			SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["sister", {solved: "aunt"}, {var: "mom"}] - 1 unknown
-			SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "id"}, "mom", {var: "mom"}]
 	SET
 		SCAN eav [{solved: "mom"}, "brother", {var: "uncle"}] - 1 unknown
 			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN eav [{solved: "mom"}, "brother", {var: "uncle"}] - 1 unknown
-			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "mom"}, "brother", {var: "uncle"}]
 	SET
 		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
 			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
-			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "cousin"}, "dad", {var: "uncle"}]
 	SET
 		SCAN ave ["brother", {solved: "uncle"}, {var: "mom"}] - 1 unknown
 			SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["brother", {solved: "uncle"}, {var: "mom"}] - 1 unknown
-			SCAN ave ["mom", {solved: "mom"}, {var: "id"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {solved: "mom"}] - 0 unknown
-					SCAN eav [{solved: "mom"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
-						SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "id"}, "dad", {var: "dad"}]
 	SET
 		SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
 			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
-			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "dad"}, "sister", {var: "aunt"}]
 	SET
 		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
 			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
-			SCAN ave ["mom", {solved: "aunt"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "cousin"}, "mom", {var: "aunt"}]
 	SET
 		SCAN ave ["sister", {solved: "aunt"}, {var: "dad"}] - 1 unknown
 			SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["sister", {solved: "aunt"}, {var: "dad"}] - 1 unknown
-			SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
-				SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "brother", {var: "uncle"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "id"}, "dad", {var: "dad"}]
 	SET
 		SCAN eav [{solved: "dad"}, "brother", {var: "uncle"}] - 1 unknown
 			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN eav [{solved: "dad"}, "brother", {var: "uncle"}] - 1 unknown
-			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "dad"}, "brother", {var: "uncle"}]
 	SET
 		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
 			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
 	REMOVE
-		SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
-			SCAN ave ["dad", {solved: "uncle"}, {var: "cousin"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown
 INDEXER "cousins" [{var: "cousin"}, "dad", {var: "uncle"}]
 	SET
 		SCAN ave ["brother", {solved: "uncle"}, {var: "dad"}] - 1 unknown
 			SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
 	REMOVE
-		SCAN ave ["brother", {solved: "uncle"}, {var: "dad"}] - 1 unknown
-			SCAN ave ["dad", {solved: "dad"}, {var: "id"}] - 1 unknown
-				SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-					SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
-				SCAN eav [{solved: "cousin"}, "dad", {solved: "uncle"}] - 0 unknown
-					SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
-						SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
-				SCAN eav [{solved: "id"}, "dad", {solved: "dad"}] - 0 unknown
-					SCAN eav [{solved: "dad"}, "sister", {var: "aunt"}] - 1 unknown
-						SCAN eav [{solved: "cousin"}, "mom", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "mom", {var: "mom"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "mom"}, "brother", {solved: "uncle"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "mom", {var: "aunt"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "sister", {solved: "aunt"}] - 0 unknown
+		SCAN eav [{solved: "id"}, "dad", {var: "dad"}] - 1 unknown
+			SCAN eav [{solved: "cousin"}, "dad", {var: "uncle"}] - 1 unknown
+				SCAN eav [{solved: "dad"}, "brother", {solved: "uncle"}] - 0 unknown

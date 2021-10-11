@@ -3,19 +3,22 @@ INDEXER "person-last-first" [{var: "id"}, "type", "person"]
 		SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
 			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
 	REMOVE
-		SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
-			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
+			SCAN eav [{solved: "id"}, "firstName", {solved: "firstName"}] - 0 unknown
+				SCAN eav [{solved: "id"}, "lastName", {solved: "lastName"}] - 0 unknown
 INDEXER "person-last-first" [{var: "id"}, "firstName", {var: "firstName"}]
 	SET
 		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
 			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
 	REMOVE
 		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{solved: "id"}, "lastName", {var: "lastName"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "firstName", {solved: "firstName"}] - 0 unknown
+				SCAN eav [{solved: "id"}, "lastName", {solved: "lastName"}] - 0 unknown
 INDEXER "person-last-first" [{var: "id"}, "lastName", {var: "lastName"}]
 	SET
 		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
 			SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
 	REMOVE
 		SCAN eav [{solved: "id"}, "type", "person"] - 0 unknown
-			SCAN eav [{solved: "id"}, "firstName", {var: "firstName"}] - 1 unknown
+			SCAN eav [{solved: "id"}, "firstName", {solved: "firstName"}] - 0 unknown
+				SCAN eav [{solved: "id"}, "lastName", {solved: "lastName"}] - 0 unknown
