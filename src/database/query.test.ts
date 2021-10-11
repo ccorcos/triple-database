@@ -1,4 +1,4 @@
-import * as assert from "assert"
+import { strict as assert } from "assert"
 import { describe, it } from "mocha"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { bindingsEqual } from "../test/bindingsEqual"

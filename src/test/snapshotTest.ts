@@ -1,7 +1,7 @@
+import { strict as assert } from "assert"
 import * as fs from "fs-extra"
-import { rootPath } from "../helpers/rootPath"
 import { it } from "mocha"
-import * as assert from "assert"
+import { rootPath } from "../helpers/rootPath"
 
 function exists(path: string) {
 	try {
@@ -29,7 +29,7 @@ export function equalsSnapshot(title: string, value: string) {
 }
 
 export function snapshotTest(name: string, fn: () => any) {
-	it(name, function() {
+	it(name, function () {
 		const title = this.test!.fullTitle().replace(/\//g, "-")
 		const result = fn()
 		equalsSnapshot(title, result)

@@ -1,28 +1,28 @@
 import * as _ from "lodash"
+import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
+import { getIndentOfLastLine, indentText } from "../helpers/printHelpers"
+import { unreachable } from "../helpers/typeHelpers"
 import {
+	DefineIndexArgs,
 	IndexerPlan,
 	prettyRemoveIndexerPlan,
 	prettySetIndexerPlan,
-	DefineIndexArgs,
 } from "./defineIndex"
-import { ReadOnlyStorage, Transaction } from "tuple-database/storage/types"
 import { generateFactListenKeys } from "./factListenKeyHelpers"
-import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
 import {
-	prettyExpression,
-	Expression,
-	Binding,
-	getAndExpressionPlan,
-	evaluateAndExpressionPlan,
 	AndExpressionReport,
+	Binding,
+	evaluateAndExpressionPlan,
+	Expression,
+	getAndExpressionPlan,
+	isVariable,
 	OrExpressionReport,
 	prettyAndExpressionReport,
-	prettyOrExpressionReport,
-	isVariable,
+	prettyExpression,
 	prettyFact,
+	prettyOrExpressionReport,
 } from "./query"
-import { Fact, Tuple, FactOperation, indexes } from "./types"
-import { unreachable } from "../helpers/typeHelpers"
+import { Fact, FactOperation, indexes, Tuple } from "./types"
 
 export type UpdateIndexesPlan = {
 	operation: FactOperation
@@ -30,7 +30,7 @@ export type UpdateIndexesPlan = {
 }
 
 export function getUpdateIndexesPlan(
-	storage: ReadOnlyStorage,
+	storage: ReadOnlyTupleStorage,
 	operation: FactOperation
 ) {
 	const updateIndexesPlan: UpdateIndexesPlan = {
@@ -39,10 +39,11 @@ export function getUpdateIndexesPlan(
 	}
 	const listenKeys = generateFactListenKeys(operation.fact)
 	for (const listenKey of listenKeys) {
-		const indexerResults = storage.scan(indexes.indexersByKey, {
-			prefix: [listenKey],
+		const indexerResults = storage.scan({
+			prefix: [indexes.indexersByKey, listenKey],
 		})
-		for (const [_listenKey, elm] of indexerResults) {
+		for (const pair of indexerResults) {
+			const [_indexName, _listenKey, elm] = pair[0]
 			// TODO: don't cast, use `data-type-ts`.
 			const indexerPlan = elm as IndexerPlan
 			updateIndexesPlan.indexerPlans.push(indexerPlan)
@@ -105,7 +106,7 @@ export function evaluateUpdateIndexesPlan(
 				// If we're adding to an index then we can add right now and it will get
 				// deduped with any results from the other AndExpressions that are part
 				// of the Or.
-				transaction.set(index.name, tuple)
+				transaction.set([index.name, ...tuple], null)
 				indexerReport.write.set.push(tuple)
 			} else if (operation.type === "remove") {
 				// If we're removing, we need to check that this tuple doesn't satisfy any
@@ -123,7 +124,7 @@ export function evaluateUpdateIndexesPlan(
 					}
 				}
 				if (!existsInOtherExpression) {
-					transaction.remove(index.name, tuple)
+					transaction.remove([index.name, ...tuple])
 					indexerReport.write.remove.push(tuple)
 				}
 			} else {

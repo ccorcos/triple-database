@@ -1,7 +1,7 @@
 import { flatten } from "lodash"
 import { compareTuple } from "tuple-database/helpers/compareTuple"
 import { scan } from "tuple-database/helpers/sortedTupleArray"
-import { ReadOnlyStorage, ScanArgs } from "tuple-database/storage/types"
+import { ReadOnlyTupleStorage, ScanArgs } from "tuple-database/storage/types"
 import { indentCascade, indentText } from "../helpers/printHelpers"
 import { Fact, Tuple, Value } from "./types"
 
@@ -257,7 +257,7 @@ export function getOrExpressionPlan(
 }
 
 function evaluateExpressionPlan(
-	storage: ReadOnlyStorage,
+	storage: ReadOnlyTupleStorage,
 	plan: ExpressionPlan
 ): Array<Binding> {
 	const prefix: Tuple = plan.prefix.map((elm) => {
@@ -268,12 +268,12 @@ function evaluateExpressionPlan(
 		}
 	})
 
-	const results = storage.scan(plan.index, { prefix })
+	const results = storage.scan({ prefix: [plan.index, ...prefix] })
 
-	const bindings = results.map((key) => {
+	const bindings = results.map(([key]) => {
 		const binding: Binding = {}
 		for (let i = 0; i < plan.unknowns.length; i++) {
-			binding[plan.unknowns[i].var] = key[prefix.length + i]
+			binding[plan.unknowns[i].var] = key[1 + prefix.length + i]
 		}
 		return binding
 	})
@@ -296,7 +296,7 @@ export type AndExpressionReport = {
 }
 
 export function evaluateAndExpressionPlan(
-	storage: ReadOnlyStorage,
+	storage: ReadOnlyTupleStorage,
 	andExpressionPlan: AndExpressionPlan
 ): { bindings: Array<Binding>; report: AndExpressionReport } {
 	const { bind, expressionPlans } = andExpressionPlan
@@ -385,7 +385,7 @@ export function resolveBindingInExpressionPlans(
 export type OrExpressionReport = Array<AndExpressionReport>
 
 export function evaluateOrExpressionPlan(
-	storage: ReadOnlyStorage,
+	storage: ReadOnlyTupleStorage,
 	plan: OrExpressionPlan
 ) {
 	const result = plan.map((andExpressionPlan) => {
@@ -411,7 +411,7 @@ export type QuerySortArgs = {
 	scan?: ScanArgs
 }
 
-export function querySort(storage: ReadOnlyStorage, args: QuerySortArgs) {
+export function querySort(storage: ReadOnlyTupleStorage, args: QuerySortArgs) {
 	const { filter: orExpression, sort, scan: scanArgs, bind } = args
 
 	const { report, bindings } = evaluateOrExpressionPlan(
@@ -437,7 +437,7 @@ export type QueryArgs = {
 	filter: OrExpression
 }
 
-export function query(storage: ReadOnlyStorage, args: QueryArgs) {
+export function query(storage: ReadOnlyTupleStorage, args: QueryArgs) {
 	return evaluateOrExpressionPlan(
 		storage,
 		getOrExpressionPlan(args.filter, args.bind || {})

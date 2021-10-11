@@ -1,15 +1,14 @@
+import { strict as assert } from "assert"
 import { describe, it } from "mocha"
-import * as assert from "assert"
-import * as _ from "lodash"
-import { getDefineIndexPlan, defineIndex } from "./defineIndex"
+import { createContactsDb, createFamilyDb } from "../test/fixtures"
 import { snapshotTest } from "../test/snapshotTest"
+import { defineIndex, getDefineIndexPlan } from "./defineIndex"
 import {
 	getPopulateIndexPlan,
-	prettyPopulateIndexPlan,
 	populateIndex,
+	prettyPopulateIndexPlan,
 	prettyPopulateIndexReport,
 } from "./populateIndex"
-import { createContactsDb, createFamilyDb } from "../test/fixtures"
 
 const id = { var: "id" }
 const firstName = { var: "firstName" }
@@ -72,14 +71,14 @@ describe("populateIndex", () => {
 			populateIndex(transaction, index)
 			transaction.commit()
 
-			const data = storage.scan(index.name)
+			const data = storage.scan({ prefix: [index.name] })
 			assert.deepEqual(data, [
-				["Corcos", "Chet", "XXX1"],
-				["Corcos", "Leon", "XXX3"],
-				["Corcos", "Sam", "XXX2"],
-				["Haas", "Wes", "XXX5"],
-				["Langdon", "Andrew", "XXX4"],
-				["Last", "Simon", "XXX6"],
+				[[index.name, "Corcos", "Chet", "XXX1"], null],
+				[[index.name, "Corcos", "Leon", "XXX3"], null],
+				[[index.name, "Corcos", "Sam", "XXX2"], null],
+				[[index.name, "Haas", "Wes", "XXX5"], null],
+				[[index.name, "Langdon", "Andrew", "XXX4"], null],
+				[[index.name, "Last", "Simon", "XXX6"], null],
 			])
 		})
 	})
@@ -106,12 +105,12 @@ describe("populateIndex", () => {
 				populateIndex(transaction, index)
 				transaction.commit()
 
-				const data = storage.scan(index.name)
+				const data = storage.scan({ prefix: [index.name] })
 				assert.deepEqual(data, [
-					["chet", "melanie"],
-					["chet", "ruth"],
-					["chet", "stephanie"],
-					["chet", "sue"],
+					[[index.name, "chet", "melanie"], null],
+					[[index.name, "chet", "ruth"], null],
+					[[index.name, "chet", "stephanie"], null],
+					[[index.name, "chet", "sue"], null],
 				])
 			})
 		})

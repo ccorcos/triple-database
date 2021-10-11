@@ -1,5 +1,5 @@
+import { strict as assert } from "assert"
 import * as _ from "lodash"
-import * as assert from "assert"
 import { Binding } from "../database/query"
 
 export function bindingsEqual(a: Array<Binding>, b: Array<Binding>) {

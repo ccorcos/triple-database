@@ -1,10 +1,10 @@
-import * as assert from "assert"
+import { strict as assert } from "assert"
 import { describe, it } from "mocha"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "./Triplestore"
 
 describe("Triplestore", () => {
-	it("Works", () => {
+	it("Works1", () => {
 		const store = new Triplestore(new InMemoryStorage())
 
 		store
@@ -45,10 +45,10 @@ describe("Triplestore", () => {
 			sort: [{ var: "lastName" }, { var: "firstName" }, { var: "id" }],
 		})
 
-		const scanResult = store.scanIndex("personByLastFirst")
+		const scanResult = store.scanIndex({ prefix: ["personByLastFirst"] })
 		assert.deepEqual(scanResult, [
-			["Corcos", "Chet", "0001"],
-			["Navarro", "Meghan", "0002"],
+			[["personByLastFirst", "Corcos", "Chet", "0001"], null],
+			[["personByLastFirst", "Navarro", "Meghan", "0002"], null],
 		])
 	})
 

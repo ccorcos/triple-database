@@ -3,7 +3,7 @@
 A database for storing triples, also know as *facts* with tooling for querying and indexing.
 
 ```ts
-import * as assert from "assert"
+import {strict as assert} from "assert"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { Triplestore } from "triple-database"
 
@@ -53,33 +53,3 @@ assert.deepEqual(scanResult, [
 	["Navarro", "Meghan", "0002"],
 ])
 ```
-
-## TODO
-
-- test that we can put arbitrary class objects in here.
-- convenient `$()` syntax for defining variables.
-- send tuples back and forth between a database in two different processes using traces and transactions.
-
-- Reactivity for `triplestore.queryFacts` with seemless in-memory index.
-- Reuse `ListenerStorage` from `tuple-database`?
-- What to do about all the query plan stuff?
-
-- cleanup
-	subscriptionHelpers?
-	write?
-	- What aren't we using anymore?
-
-- convenient syntax:
-	// peopleByLastFirstName:
-	// [?id, "type", "person"]
-	// [?id, "firstName", ?firstName]
-	// [?id, "lastName", ?lastName]
-	// => [?lastName, ?firstName, ?id]
-
-- delete index?
-- {and: []}, {or: []}
-
-## Later
-- deterministic query name
-	- query optimization
-- .scan -> .range?

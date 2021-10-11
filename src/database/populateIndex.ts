@@ -1,15 +1,14 @@
 import { Transaction } from "tuple-database/storage/types"
+import { indentCascade } from "../helpers/printHelpers"
+import { DefineIndexArgs } from "./defineIndex"
 import {
-	OrExpressionPlan,
-	Sort,
-	getOrExpressionPlan,
-	prettyOrExpressionPlan,
-	OrExpressionReport,
 	evaluateOrExpressionPlan,
+	getOrExpressionPlan,
+	OrExpressionPlan,
+	OrExpressionReport,
+	prettyOrExpressionPlan,
 	prettyOrExpressionReport,
 } from "./query"
-import { DefineIndexArgs } from "./defineIndex"
-import { indentCascade } from "../helpers/printHelpers"
 
 export type PopulateIndexPlan = {
 	index: DefineIndexArgs
@@ -49,7 +48,7 @@ export function evaluatePopulateIndexPlan(
 
 	for (const binding of bindings) {
 		const tuple = index.sort.map((variable) => binding[variable.var])
-		transaction.set(index.name, tuple)
+		transaction.set([index.name, ...tuple], null)
 	}
 	const report: PopulateIndexReport = {
 		index,

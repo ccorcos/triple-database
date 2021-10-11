@@ -1,21 +1,21 @@
 import * as _ from "lodash"
-import { Transaction, ReadOnlyStorage } from "tuple-database/storage/types"
+import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
+import { getIndentOfLastLine, indentText } from "../helpers/printHelpers"
+import { FactListenKey, getFactListenKey } from "./factListenKeyHelpers"
 import {
-	OrExpression,
-	Expression,
 	AndExpression,
-	Variable,
-	isVariable,
-	Sort,
-	resolveUnknownsInAndExpression,
+	Expression,
 	getAndExpressionPlan,
-	prettyAndExpressionPlan,
-	prettyExpression,
+	isVariable,
+	OrExpression,
 	PartiallySolvedAndExpression,
 	PartiallySolvedOrExpression,
+	prettyAndExpressionPlan,
+	prettyExpression,
+	resolveUnknownsInAndExpression,
+	Sort,
+	Variable,
 } from "./query"
-import { indentText, getIndentOfLastLine } from "../helpers/printHelpers"
-import { FactListenKey, getFactListenKey } from "./factListenKeyHelpers"
 import { indexes } from "./types"
 
 export type DefineIndexArgs = {
@@ -126,9 +126,12 @@ export function evaluateDefineIndexPlan(
 	transaction: Transaction,
 	plan: DefineIndexPlan
 ): DefineIndexPlan {
-	transaction.set(indexes.indexesByName, [plan.name, plan])
+	transaction.set([indexes.indexesByName, plan.name, plan], null)
 	for (const indexerPlan of plan.indexerPlans) {
-		transaction.set(indexes.indexersByKey, [indexerPlan.listenKey, indexerPlan])
+		transaction.set(
+			[indexes.indexersByKey, indexerPlan.listenKey, indexerPlan],
+			null
+		)
 	}
 	return plan
 }
@@ -137,11 +140,11 @@ export function defineIndex(transaction: Transaction, args: DefineIndexArgs) {
 	return evaluateDefineIndexPlan(transaction, getDefineIndexPlan(args))
 }
 
-export function indexExists(storage: ReadOnlyStorage, plan: DefineIndexPlan) {
-	return storage.scan(indexes.indexesByName, {
-		gte: [plan.name, plan],
-		lte: [plan.name, plan],
-	}).length
+export function indexExists(
+	storage: ReadOnlyTupleStorage,
+	plan: DefineIndexPlan
+) {
+	return storage.exists([indexes.indexesByName, plan.name, plan])
 }
 
 // TODO: delete index
