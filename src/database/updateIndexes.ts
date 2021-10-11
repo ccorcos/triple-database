@@ -85,7 +85,7 @@ export function evaluateUpdateIndexesPlan(
 			expression,
 			restAndExpression,
 			restOrExpression,
-		} = indexerPlan.args
+		} = indexerPlan
 
 		const binding = getBindingFromIndexListener(expression, operation.fact)
 		const andExpressionPlan = getAndExpressionPlan(restAndExpression, binding)
@@ -197,9 +197,9 @@ export function prettyUpdateIndexesPlan(updateIndexesPlan: UpdateIndexesPlan) {
 					? prettySetIndexerPlan(indexerPlan)
 					: prettyRemoveIndexerPlan(indexerPlan)
 			return [
-				`INDEXER ${prettyExpression(
-					indexerPlan.args.expression
-				)} ${JSON.stringify(indexerPlan.args.index.name)}`,
+				`INDEXER ${prettyExpression(indexerPlan.expression)} ${JSON.stringify(
+					indexerPlan.index.name
+				)}`,
 				indentText(plan),
 			].join("\n")
 		})

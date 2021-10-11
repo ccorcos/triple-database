@@ -1,7 +1,7 @@
 import * as _ from "lodash"
 import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
 import { getIndentOfLastLine, indentText } from "../helpers/printHelpers"
-import { FactListenKey, getFactListenKey } from "./factListenKeyHelpers"
+import { getFactListenKey } from "./factListenKeyHelpers"
 import {
 	AndExpression,
 	Expression,
@@ -29,16 +29,13 @@ export type DefineIndexPlan = DefineIndexArgs & {
 }
 
 export type IndexerPlan = {
-	listenKey: FactListenKey
-	args: {
-		index: DefineIndexArgs
-		/** For determining the var names */
-		expression: Expression
-		/* For evaluating the tuple to be added/removed */
-		restAndExpression: PartiallySolvedAndExpression
-		/* For checking if the tuple is redundant from another expression */
-		restOrExpression: PartiallySolvedOrExpression
-	}
+	index: DefineIndexArgs
+	/** For determining the var names */
+	expression: Expression
+	/* For evaluating the tuple to be added/removed */
+	restAndExpression: PartiallySolvedAndExpression
+	/* For checking if the tuple has a redundant trace */
+	restOrExpression: PartiallySolvedOrExpression
 }
 
 export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
@@ -68,13 +65,10 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 					)
 
 				const indexerPlan: IndexerPlan = {
-					listenKey: getFactListenKey(expression),
-					args: {
-						index,
-						expression,
-						restAndExpression,
-						restOrExpression,
-					},
+					index,
+					expression,
+					restAndExpression,
+					restOrExpression,
 				}
 				return indexerPlan
 			})
@@ -84,12 +78,12 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 }
 
 export function prettySetIndexerPlan(indexerPlan: IndexerPlan) {
-	const { restAndExpression } = indexerPlan.args
+	const { restAndExpression } = indexerPlan
 	return prettyAndExpressionPlan(getAndExpressionPlan(restAndExpression))
 }
 
 export function prettyRemoveIndexerPlan(indexerPlan: IndexerPlan) {
-	const { restOrExpression } = indexerPlan.args
+	const { restOrExpression } = indexerPlan
 	const andPlan = prettySetIndexerPlan(indexerPlan)
 	if (restOrExpression.length === 0) {
 		return andPlan
@@ -107,9 +101,9 @@ export function prettyRemoveIndexerPlan(indexerPlan: IndexerPlan) {
 export function prettyDefineIndexPlan(plan: DefineIndexPlan) {
 	const indexersPlan = plan.indexerPlans.map((indexerPlan) => {
 		return [
-			`INDEXER ${JSON.stringify(
-				indexerPlan.args.index.name
-			)} ${prettyExpression(indexerPlan.args.expression)}`,
+			`INDEXER ${JSON.stringify(indexerPlan.index.name)} ${prettyExpression(
+				indexerPlan.expression
+			)}`,
 			`\tSET`,
 			indentText(prettySetIndexerPlan(indexerPlan), 2),
 			`\tREMOVE`,
@@ -127,7 +121,11 @@ export function evaluateDefineIndexPlan(
 	transaction.set([indexes.indexesByName, plan.name, plan], null)
 	for (const indexerPlan of plan.indexerPlans) {
 		transaction.set(
-			[indexes.indexersByKey, indexerPlan.listenKey, indexerPlan],
+			[
+				indexes.indexersByKey,
+				getFactListenKey(indexerPlan.expression),
+				indexerPlan,
+			],
 			null
 		)
 	}
