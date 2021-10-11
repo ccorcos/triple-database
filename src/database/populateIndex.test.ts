@@ -9,6 +9,7 @@ import {
 	prettyPopulateIndexPlan,
 	prettyPopulateIndexReport,
 } from "./populateIndex"
+import { scanIndex } from "./scanIndex"
 
 const id = { var: "id" }
 const firstName = { var: "firstName" }
@@ -71,14 +72,14 @@ describe("populateIndex", () => {
 			populateIndex(transaction, index)
 			transaction.commit()
 
-			const data = storage.scan({ prefix: [index.name] })
+			const data = scanIndex(storage, { index: index.name })
 			assert.deepEqual(data, [
-				[[index.name, "Corcos", "Chet", "XXX1"], null],
-				[[index.name, "Corcos", "Leon", "XXX3"], null],
-				[[index.name, "Corcos", "Sam", "XXX2"], null],
-				[[index.name, "Haas", "Wes", "XXX5"], null],
-				[[index.name, "Langdon", "Andrew", "XXX4"], null],
-				[[index.name, "Last", "Simon", "XXX6"], null],
+				["Corcos", "Chet", "XXX1"],
+				["Corcos", "Leon", "XXX3"],
+				["Corcos", "Sam", "XXX2"],
+				["Haas", "Wes", "XXX5"],
+				["Langdon", "Andrew", "XXX4"],
+				["Last", "Simon", "XXX6"],
 			])
 		})
 	})
@@ -105,12 +106,12 @@ describe("populateIndex", () => {
 				populateIndex(transaction, index)
 				transaction.commit()
 
-				const data = storage.scan({ prefix: [index.name] })
+				const data = scanIndex(storage, { index: index.name })
 				assert.deepEqual(data, [
-					[[index.name, "chet", "melanie"], null],
-					[[index.name, "chet", "ruth"], null],
-					[[index.name, "chet", "stephanie"], null],
-					[[index.name, "chet", "sue"], null],
+					["chet", "melanie"],
+					["chet", "ruth"],
+					["chet", "stephanie"],
+					["chet", "sue"],
 				])
 			})
 		})

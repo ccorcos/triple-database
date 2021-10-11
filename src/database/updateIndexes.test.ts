@@ -4,6 +4,7 @@ import { createContactsDb, createFamilyDb } from "../test/fixtures"
 import { snapshotTest } from "../test/snapshotTest"
 import { defineIndex } from "./defineIndex"
 import { populateIndex } from "./populateIndex"
+import { scanIndex } from "./scanIndex"
 import {
 	getUpdateIndexesPlan,
 	prettyUpdateIndexesPlan,
@@ -184,15 +185,15 @@ describe("updateIndexes", () => {
 			})
 			transaction.commit()
 
-			const data = storage.scan({ prefix: [index.name] })
+			const data = scanIndex(storage, { index: index.name })
 			assert.deepEqual(data, [
-				[[index.name, "chet", "melanie"], null],
-				[[index.name, "chet", "ruth"], null],
-				[[index.name, "chet", "stephanie"], null],
-				[[index.name, "chet", "sue"], null],
-				[[index.name, "sam", "melanie"], null],
-				[[index.name, "sam", "ruth"], null],
-				[[index.name, "sam", "sue"], null],
+				["chet", "melanie"],
+				["chet", "ruth"],
+				["chet", "stephanie"],
+				["chet", "sue"],
+				["sam", "melanie"],
+				["sam", "ruth"],
+				["sam", "sue"],
 				// No stephanie because I didnt set sam's dad.
 			])
 		})
@@ -220,11 +221,11 @@ describe("updateIndexes", () => {
 			})
 			transaction.commit()
 
-			const data = storage.scan({ prefix: [index.name] })
+			const data = scanIndex(storage, { index: index.name })
 			assert.deepEqual(data, [
-				[[index.name, "chet", "ruth"], null],
-				[[index.name, "chet", "stephanie"], null],
-				[[index.name, "chet", "sue"], null],
+				["chet", "ruth"],
+				["chet", "stephanie"],
+				["chet", "sue"],
 			])
 		})
 
@@ -256,11 +257,11 @@ describe("updateIndexes", () => {
 				],
 			})
 
-			assert.deepEqual(transaction.scan({ prefix: [index.name] }), [
-				[[index.name, "chet", "chet"], null],
-				[[index.name, "chet", "sam"], null],
-				[[index.name, "sam", "chet"], null],
-				[[index.name, "sam", "sam"], null],
+			assert.deepEqual(scanIndex(transaction, { index: index.name }), [
+				["chet", "chet"],
+				["chet", "sam"],
+				["sam", "chet"],
+				["sam", "sam"],
 			])
 
 			// Removing sam's dad still makes him a sibling through my mom/
@@ -268,19 +269,19 @@ describe("updateIndexes", () => {
 				remove: [["sam", "dad", "leon"]],
 			})
 
-			assert.deepEqual(transaction.scan({ prefix: [index.name] }), [
-				[[index.name, "chet", "chet"], null],
-				[[index.name, "chet", "sam"], null],
-				[[index.name, "sam", "chet"], null],
-				[[index.name, "sam", "sam"], null],
+			assert.deepEqual(scanIndex(transaction, { index: index.name }), [
+				["chet", "chet"],
+				["chet", "sam"],
+				["sam", "chet"],
+				["sam", "sam"],
 			])
 
 			write(transaction, {
 				remove: [["sam", "mom", "deborah"]],
 			})
-			assert.deepEqual(transaction.scan({ prefix: [index.name] }), [
-				[[index.name, "chet", "chet"], null],
-				[[index.name, "sam", "sam"], null],
+			assert.deepEqual(scanIndex(transaction, { index: index.name }), [
+				["chet", "chet"],
+				["sam", "sam"],
 			])
 		})
 	})

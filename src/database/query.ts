@@ -399,13 +399,9 @@ export function evaluateOrExpressionPlan(
 export type Sort = Array<Variable>
 
 export type QuerySortArgs = {
-	// Bind(Expression): Expression
 	bind?: Binding
-	// Filter(Expression): Bindings
 	filter: OrExpression
-	// Sort(Binding): Tuple
 	sort: Sort
-	// Scan(Tuple): Tuple
 	scan?: ScanArgs
 }
 
