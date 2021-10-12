@@ -35,3 +35,7 @@ export function sorted(sort: Variable[]): Sort {
 // 	]),
 // 	sort: sorted([$("lastName"), $("firstName"), $("id")]),
 // })
+
+// ?id type Person
+// ?id firstName ?firstName
+// ?id lastName ?lastName
