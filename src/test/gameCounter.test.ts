@@ -5,9 +5,6 @@ import { compareValue } from "tuple-database/helpers/compareTuple"
 import { Triplestore } from "../database/Triplestore"
 import { Value } from "../database/types"
 
-type Player = { id: number; name: string; score: number }
-type Game = { players: Player[] }
-
 const db = new Triplestore()
 
 const obj = (maybeId?: string) => {
@@ -81,11 +78,6 @@ db.ensureIndex({
 	sort: [{ var: "listId" }, { var: "order" }, { var: "value" }],
 })
 
-function getList(id: string) {
-	const results = db.scanIndex({ index: "list", prefix: [id] })
-	return results.map(([_id, _order, value]) => value)
-}
-
 function randomId() {
 	return Math.random().toString().slice(4)
 }
@@ -93,9 +85,11 @@ function randomId() {
 const list = (maybeId?: string) => {
 	const id = maybeId === undefined ? randomId() : maybeId
 
-	return new Proxy<Value[]>([], {
+	return new Proxy<Value[] & { id: string }>([] as any, {
 		get(target, property) {
 			if (typeof property === "symbol") throw new Error("No symbols.")
+			if (property === "id") return id
+
 			const results = db.scanIndex({ index: "list", prefix: [id] })
 			const values = results.map(([_id, _order, value]) => value)
 			if (property === "length") return values.length
@@ -137,18 +131,89 @@ describe("list proxy", () => {
 	})
 })
 
-class $Game {
-	constructor(public id: string) {}
+const game = obj()
+const playersList = list()
 
-	get players() {
-		const results = db.query({
-			filter: [[[{ value: this.id }, { value: "players" }, { var: "listId" }]]],
-		})
-		if (results.length === 0) {
-		}
+game.playersList = [playersList.id]
 
-		db.scanIndex({ index: "list", prefix: [] })
+const player0 = obj()
+player0.name = [""]
+player0.score = [0]
 
-		return []
-	}
+const player1 = obj()
+player1.name = [""]
+player1.score = [0]
+
+playersList.push(player0.id)
+playersList.push(player1.id)
+
+function addPlayer() {
+	const newPlayer = obj()
+	newPlayer.name = [""]
+	newPlayer.score = [0]
+	playersList.push(newPlayer.id)
 }
+
+function destroy(id: string) {
+	const tx = db.transact()
+	const propValue = tx.query({
+		filter: [[[{ value: id }, { var: "prop" }, { var: "value" }]]],
+	})
+	for (const { prop, value } of propValue) {
+		tx.remove([id, prop, value])
+	}
+	const relationProp = tx.query({
+		filter: [[[{ var: "relation" }, { var: "prop" }, { value: id }]]],
+	})
+	for (const { relation, prop } of relationProp) {
+		tx.remove([relation, prop, id])
+	}
+	tx.commit()
+}
+
+db.ensureIndex({
+	name: "listItem",
+	filter: [
+		[
+			[{ var: "listId" }, { value: "item" }, { var: "itemId" }],
+			[{ var: "itemId" }, { value: "order" }, { var: "order" }],
+			[{ var: "itemId" }, { value: "value" }, { var: "value" }],
+		],
+	],
+	sort: [{ var: "listId" }, { var: "value" }, { var: "itemId" }],
+})
+
+function deletePlayer(id: string) {
+	const [itemId] = db
+		.scanIndex({
+			index: "listItem",
+			prefix: [playersList.id, id],
+		})
+		.map(([_listId, _value, itemId]) => itemId)
+
+	destroy(id)
+	destroy(itemId as string)
+}
+
+function editName(id: string, name: string) {
+	obj(id).name = [name]
+}
+
+function incrementScore(id: string, delta: number) {
+	const player = obj(id)
+	const [score] = player.score
+	player.score = [(score as number) + delta]
+}
+
+describe("Game Counter", () => {
+	it("works", () => {
+		assert.equal(playersList.length, 2)
+
+		incrementScore(playersList[0] as string, 10)
+		assert.equal(player0.score[0], 10)
+		assert.equal(obj(playersList[0] as string).score[0], 10)
+
+		addPlayer()
+		assert.equal(playersList.length, 3)
+	})
+})
