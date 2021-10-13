@@ -47,12 +47,20 @@ function gameToFacts(game: typeof Game["value"]) {
 	return facts
 }
 
+// e, a, v, ea, ve, av
 // What if lists were built in?
 // - [e, a, o, v]
 // - [e, a, v, o]
 // - [a, v, e]
+// - [v, e, a] -- how are two objects related?
+// -
+
 // - [v, a, e]
-// - [e, v, a]
+// - [e, v, a] -> this
+
+// HERE
+// - what if we do the game counter with the tuplestore and we create a custom triplestore with indexers.
+// - then we can think about the end-user query model.
 
 // - [doc tag red], [dog tag blue],
 //   [list entity dog], [list property tag], [list item item1], [item1 value red], [list item item2], [item2 value blue]

@@ -95,6 +95,7 @@ export function getExpressionPlan(
 		} else {
 			if (isLiteral(value) || isSolved(value)) {
 				// E_V
+
 				return {
 					index: "vea",
 					prefix: [value, entity],
@@ -139,9 +140,9 @@ export function getExpressionPlan(
 				// __V
 				// Warning: this is expensive.
 				return {
-					index: "vae",
+					index: "vea",
 					prefix: [value],
-					unknowns: [attribute, entity],
+					unknowns: [entity, attribute],
 				}
 			} else {
 				// ___

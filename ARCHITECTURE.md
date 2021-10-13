@@ -4,7 +4,9 @@ Built on top of `tuple-database`, an order-key value store with lexicographical 
 
 ## Triplestore
 
-There are 4 indexes: eav, ave, vea, vae.
+
+
+There are 3 indexes: eav, ave, vea. (queryable with the following prefixes: e, a, v, ea, ve, av => eav, vea, ave)
 
 A fact is an [e,a,v]. Operation is ["add" | "remove", fact]
 
