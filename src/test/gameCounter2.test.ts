@@ -423,15 +423,72 @@ describe("serializeObjDiff", () => {
 	})
 })
 
-// TODO:
-// - we need to be able to parseObj reactively so we can update from elsewhere.
-//   - assumption: every "module" that wants to parseObj must have full normalized data.
+// Checkpoint: Where are we?
+// 1. Represeting lists in the triplestore is pretty frustrating.
+// 2. We can use EAOV and VAEO to handle ordered data with o=null for unordered things.
+// 3. Lets ditch the triplestore for now and build one on the tuplestore.
+// 4. If we can use the immutable data structure to efficiently diff objects, then we can still use StateMachines for our components.
+// 5. So long as each component's data is completely normalized, we should be able to do this, just need parseObj to be reactive...
+//
+// TODO: What's next?
+// - how can we make parseObj reactive so that we can use this for state updates?
+//   - we want reactive updates to preserve structural sharing!
+// - serializeObjDiff between steps
+// - suppose we have a multiple games going on, but we want a single player's score to be synced between the two.
+//   it's contrived in this case, but a clean example of the composition benefits we get from normalization.
 //
 
-// function addPlayer() {
-// function deletePlayer(id: string) {
-// function editName(id: string, name: string) {
-// function incrementScore(id: string, delta: number) {
+// Reactive parseObj using Reactive Magic approach?
+// A json object with reactive updates that preserves structural sharing.
 
-// We can use the same immutable updates as before and just diff to generate fact updates.
-// Example: suppose, one player is playing two games with the score synced between the two.
+class Cursor<T> {
+	constructor(private _value: T) {}
+
+	public get value() {
+		return this._value
+	}
+
+	public set value(value: T) {
+		this._value = value
+		this.listeners.forEach((fn) => fn(value))
+	}
+
+	private listeners = new Set<(newValue: T) => void>()
+
+	public listen(fn: (newValue: T) => void) {
+		this.listeners.add(fn)
+		return () => this.listeners.delete(fn)
+	}
+}
+
+// Goal:
+// - updating database somewhere else should update the JSON object immutably
+
+function parseObj2<T extends { id: string }>(
+	db: ReadOnlyTupleStorage,
+	id: string,
+	schema: t.RuntimeDataType<T>
+): T {
+	const dataType = schema.dataType
+	if (dataType.type !== "object") throw new Error("Not an object schema.")
+
+	const obj = { id } as any
+	for (const [key, keySchema] of Object.entries(dataType.required)) {
+		if (key === "id") continue
+
+		const values = db
+			.scan({ prefix: ["eaov", id, key] })
+			.map(([tuple]) => tuple[tuple.length - 1])
+
+		obj[key] = parseValue(db, values, new t.RuntimeDataType(keySchema))
+		// try {
+		// } catch (error) {
+		// 	error.message += " " + key
+		// 	throw error
+		// }
+	}
+
+	const cursor = new Cursor<T>(obj as any)
+
+	return obj
+}

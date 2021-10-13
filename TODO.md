@@ -7,6 +7,7 @@
 	- EXPLAIN documentation
 
 
+- check out the bottom of gameCounter2.test.ts
 
 
 
