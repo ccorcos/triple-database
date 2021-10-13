@@ -1,5 +1,7 @@
 ## TODO
 
+install tuple-database in the readme.
+
 - data-type-ts / hyperstruct
 
 - basic REPL demo for showing people how it works.

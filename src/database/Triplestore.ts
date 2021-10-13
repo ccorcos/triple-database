@@ -48,8 +48,11 @@ export class Triplestore {
 	ensureIndex(args: DefineIndexArgs) {
 		const result = this.storage
 			.scan({ prefix: [indexes.indexesByName, args.name] })
-			.map(([tuple]) => tuple[tuple.length - 1] as DefineIndexPlan)
-			.map(({ filter, name, sort }) => ({ filter, name, sort }))
+			.map(
+				([tuple]) =>
+					tuple[tuple.length - 1] as Pick<DefineIndexPlan, "filter" | "sort">
+			)
+			.map(({ filter, sort }) => ({ name: args.name, filter, sort }))
 
 		if (result.length > 1) {
 			throw new Error(
