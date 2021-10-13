@@ -53,3 +53,7 @@ assert.deepEqual(scanResult, [
 	["Navarro", "Meghan", "0002"],
 ])
 ```
+
+
+https://ccorcos.github.io/triplestore-repl
+https://www.github.com/ccorcos/triplestore-repl
