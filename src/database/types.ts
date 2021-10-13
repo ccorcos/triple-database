@@ -9,6 +9,6 @@ export type FactOperation =
 	| { type: "remove"; fact: Fact }
 
 export const indexes = {
-	indexesByName: "index",
 	indexersByKey: "listener",
+	indexesByName: "index",
 }

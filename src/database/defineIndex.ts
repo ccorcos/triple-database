@@ -111,7 +111,10 @@ export function evaluateDefineIndexPlan(
 	plan: DefineIndexPlan
 ): DefineIndexPlan {
 	const { name, filter, sort } = plan
-	transaction.set([indexes.indexesByName, name, { filter, sort }], null)
+	transaction.set(
+		[indexes.indexesByName, name, "definition", { filter, sort }],
+		null
+	)
 	for (const indexerPlan of plan.indexerPlans) {
 		transaction.set(
 			[
@@ -134,7 +137,12 @@ export function indexExists(
 	plan: DefineIndexPlan
 ) {
 	const { name, filter, sort } = plan
-	return storage.exists([indexes.indexesByName, name, { filter, sort }])
+	return storage.exists([
+		indexes.indexesByName,
+		name,
+		"definition",
+		{ filter, sort },
+	])
 }
 
 function getUnknownsInExpression(expression: Expression): Array<Variable> {

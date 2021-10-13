@@ -116,7 +116,10 @@ export function evaluateUpdateIndexesPlan(
 				// If we're adding to an index then we can add right now and it will get
 				// deduped with any results from the other AndExpressions that are part
 				// of the Or.
-				transaction.set([index.name, ...tuple], null)
+				transaction.set(
+					[indexes.indexesByName, index.name, "data", ...tuple],
+					null
+				)
 				indexerReport.write.set.push(tuple)
 			} else if (operation.type === "remove") {
 				// If we're removing, we need to check that this tuple doesn't satisfy based
@@ -155,7 +158,12 @@ export function evaluateUpdateIndexesPlan(
 				)
 
 				if (result.bindings.length === 0) {
-					transaction.remove([index.name, ...tuple])
+					transaction.remove([
+						indexes.indexesByName,
+						index.name,
+						"data",
+						...tuple,
+					])
 					indexerReport.write.remove.push(tuple)
 				}
 			} else {

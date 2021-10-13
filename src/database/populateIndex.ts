@@ -9,6 +9,7 @@ import {
 	prettyOrExpressionPlan,
 	prettyOrExpressionReport,
 } from "./query"
+import { indexes } from "./types"
 
 export type PopulateIndexPlan = {
 	index: DefineIndexArgs
@@ -48,7 +49,7 @@ export function evaluatePopulateIndexPlan(
 
 	for (const binding of bindings) {
 		const tuple = index.sort.map((variable) => binding[variable.var])
-		transaction.set([index.name, ...tuple], null)
+		transaction.set([indexes.indexesByName, index.name, "data", ...tuple], null)
 	}
 	const report: PopulateIndexReport = {
 		index,
