@@ -15,6 +15,10 @@ export function write(transaction: Transaction, args: FactWrites): WriteReport {
 
 	if (args.set) {
 		// e, a, v, ea, ve, av => eav, vea, ave
+		// 3 works, but it isn't so friendly for listing inverse by attribute.
+		// https://docs.datomic.com/on-prem/query/indexes.html
+		// e, a, v, ea, ve, av => va, ev, ae, we want vae and eav which has in the middle so we can't do it with 3 this way.
+
 		for (const [e, a, v] of args.set) {
 			transaction.set(["eav", e, a, v], null)
 			transaction.set(["ave", a, v, e], null)
