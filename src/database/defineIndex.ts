@@ -55,17 +55,24 @@ export function getDefineIndexPlan(index: DefineIndexArgs): DefineIndexPlan {
 				// Upon solving the andExpression, if we are removing a tuple from the index,
 				// we need to check the rest of the orExpression to make sure that the same result
 				// isn't redundant from the other traces.
-				const restOrExpression = orExpression
-					.filter((otherAndExpression) =>
-						// We want to keep the restAndExpression in case there's a redundant trace within the
-						// same AndExpression. For example, a redundant friend-of-a-friend.
-						otherAndExpression === andExpression
-							? restAndExpression
-							: otherAndExpression
-					)
-					.map((andExpression) =>
+				let restOrExpression: PartiallySolvedOrExpression
+				if (orExpression.length === 1) {
+					if (andExpression.length === 1) {
+						// If its just a single clause, then there's no redundant trance.
+						restOrExpression = []
+					} else {
+						// It's possible there's a redundant trace in the same AndExpression.
+						// For example, friend-of-a-friend.
+						restOrExpression = orExpression.map((andExpression) =>
+							resolveUnknownsInAndExpression(andExpression, index.sort)
+						)
+					}
+				} else {
+					// And obviously there can be redundancies if there is an OrExpression.
+					restOrExpression = orExpression.map((andExpression) =>
 						resolveUnknownsInAndExpression(andExpression, index.sort)
 					)
+				}
 
 				const indexerPlan: IndexerPlan = {
 					index,

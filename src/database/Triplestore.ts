@@ -47,7 +47,7 @@ export class Triplestore {
 
 	ensureIndex(args: DefineIndexArgs) {
 		const result = this.storage
-			.scan({ prefix: [indexes.indexesByName, args.name] })
+			.scan({ prefix: [indexes.indexesByName, args.name, "definition"] })
 			.map(
 				([tuple]) =>
 					tuple[tuple.length - 1] as Pick<DefineIndexPlan, "filter" | "sort">
