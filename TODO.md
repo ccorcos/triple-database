@@ -8,7 +8,7 @@
 	query ?x y z, a ?b ?x | sort ?a ?b | index name
 	scan name >=a MAX prefix 12
 
-	do this in a web app and show the data on the side.
+- do this in a web app and show the data on the side.
 
 - EXPLAIN documentation
 - fix up the README
