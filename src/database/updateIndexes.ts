@@ -58,8 +58,8 @@ export function getUpdateIndexesPlan(
 export type IndexerReport = {
 	index: DefineIndexArgs
 	expression: Expression
-	restAndExpressionReport: AndExpressionReport
-	restOrExpressionReport: OrExpressionReport
+	restAndExpressionReport: AndExpressionReport | undefined
+	restOrExpressionReport: OrExpressionReport | undefined
 	write: { set: Array<Tuple>; remove: Array<Tuple> }
 }
 
@@ -88,18 +88,25 @@ export function evaluateUpdateIndexesPlan(
 		} = indexerPlan
 
 		const binding = getBindingFromIndexListener(expression, operation.fact)
-		const andExpressionPlan = getAndExpressionPlan(restAndExpression, binding)
-		const {
-			bindings: partialBindings,
-			report: restAndExpressionReport,
-		} = evaluateAndExpressionPlan(transaction, andExpressionPlan)
 
 		const indexerReport: IndexerReport = {
 			index,
 			expression,
-			restAndExpressionReport,
+			restAndExpressionReport: undefined,
 			restOrExpressionReport: [],
 			write: { set: [], remove: [] },
+		}
+
+		let partialBindings: Binding[]
+		if (restAndExpression.length === 0) {
+			// This is a one-line filter and thus we already have the result.
+			partialBindings = [binding]
+		} else {
+			// Evaluate the rest of the AndExpression
+			const andExpressionPlan = getAndExpressionPlan(restAndExpression, binding)
+			const result = evaluateAndExpressionPlan(transaction, andExpressionPlan)
+			partialBindings = result.bindings
+			indexerReport.restAndExpressionReport = result.report
 		}
 
 		for (const partialBinding of partialBindings) {
@@ -157,9 +164,9 @@ export function evaluateUpdateIndexesPlan(
 		}
 
 		// Collapse reports together and remove the binding.
-		indexerReport.restOrExpressionReport = collapseAndExpressionReports(
-			indexerReport.restOrExpressionReport
-		)
+		indexerReport.restOrExpressionReport = indexerReport.restOrExpressionReport
+			? collapseAndExpressionReports(indexerReport.restOrExpressionReport)
+			: undefined
 
 		updateIndexesReport.indexerReports.push(indexerReport)
 	}
@@ -217,19 +224,22 @@ export function prettyUpdateIndexesReport(
 	const { operation, indexerReports } = updateIndexesReport
 	const indexerUpdates = indexerReports
 		.map((indexerReport) => {
-			let andReport = indentText(
-				prettyAndExpressionReport(indexerReport.restAndExpressionReport)
-			)
+			let andReport =
+				indexerReport.restAndExpressionReport &&
+				indentText(
+					prettyAndExpressionReport(indexerReport.restAndExpressionReport)
+				)
 
 			return _.compact([
 				`INDEXER ${prettyExpression(indexerReport.expression)} ${JSON.stringify(
 					indexerReport.index.name
 				)}`,
 				andReport,
-				indexerReport.restOrExpressionReport.length &&
+				indexerReport.restOrExpressionReport &&
+					indexerReport.restOrExpressionReport.length &&
 					indentText(
 						prettyOrExpressionReport(indexerReport.restOrExpressionReport),
-						getIndentOfLastLine(andReport) + 1
+						getIndentOfLastLine(andReport || "") + 1
 					),
 			]).join("\n")
 		})

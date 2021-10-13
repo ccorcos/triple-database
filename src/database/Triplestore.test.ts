@@ -154,4 +154,53 @@ describe("Triplestore", () => {
 			{ id: 1, something: 2 },
 		])
 	})
+
+	it("Index is updates after writes.", () => {
+		const db = new Triplestore()
+
+		db.transact()
+			.set(["chet", "color", "blue"])
+			.set(["sean", "color", "green"])
+			.commit()
+
+		assert.deepEqual(
+			db.query({
+				filter: [[[{ var: "person" }, { value: "color" }, { var: "color" }]]],
+			}),
+			[
+				{ person: "chet", color: "blue" },
+				{ person: "sean", color: "green" },
+			]
+		)
+
+		assert.deepEqual(
+			db.querySort({
+				filter: [[[{ var: "person" }, { value: "color" }, { var: "color" }]]],
+				sort: [{ var: "color" }, { var: "person" }],
+			}),
+			[
+				["blue", "chet"],
+				["green", "sean"],
+			]
+		)
+
+		db.ensureIndex({
+			name: "personByColor",
+			filter: [[[{ var: "person" }, { value: "color" }, { var: "color" }]]],
+			sort: [{ var: "color" }, { var: "person" }],
+		})
+
+		assert.deepEqual(db.scanIndex({ index: "personByColor" }), [
+			["blue", "chet"],
+			["green", "sean"],
+		])
+
+		db.transact().set(["meghan", "color", "yellow"]).commit()
+
+		assert.deepEqual(db.scanIndex({ index: "personByColor" }), [
+			["blue", "chet"],
+			["green", "sean"],
+			["yellow", "meghan"],
+		])
+	})
 })

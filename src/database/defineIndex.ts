@@ -3,7 +3,6 @@ import { ReadOnlyTupleStorage, Transaction } from "tuple-database/storage/types"
 import { indentText } from "../helpers/printHelpers"
 import { getFactListenKey } from "./factListenKeyHelpers"
 import {
-	AndExpression,
 	Expression,
 	getAndExpressionPlan,
 	getOrExpressionPlan,
@@ -136,17 +135,6 @@ export function indexExists(
 	return storage.exists([indexes.indexesByName, plan.name, plan])
 }
 
-// TODO: delete index
-
 function getUnknownsInExpression(expression: Expression): Array<Variable> {
 	return _.uniqWith(expression.filter(isVariable), _.isEqual)
-}
-
-function getUnknownsInAndExpression(
-	andExpression: AndExpression
-): Array<Variable> {
-	return _.uniqWith(
-		_.flatten(andExpression.map(getUnknownsInExpression)),
-		_.isEqual
-	)
 }

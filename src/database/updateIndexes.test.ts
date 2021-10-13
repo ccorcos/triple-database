@@ -1,5 +1,6 @@
 import { strict as assert } from "assert"
 import { describe, it } from "mocha"
+import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { createContactsDb, createFamilyDb } from "../test/fixtures"
 import { snapshotTest } from "../test/snapshotTest"
 import { defineIndex } from "./defineIndex"
@@ -22,6 +23,51 @@ const aunt = { var: "aunt" }
 const sibling = { var: "sibling" }
 
 describe("updateIndexes", () => {
+	it("works2", () => {
+		const storage = new InMemoryStorage()
+		let tx = storage.transact()
+		write(tx, {
+			set: [
+				["chet", "color", "blue"],
+				["sean", "color", "green"],
+			],
+		})
+		tx.commit()
+
+		tx = storage.transact()
+		defineIndex(tx, {
+			name: "personByColor",
+			filter: [[[{ var: "person" }, { value: "color" }, { var: "color" }]]],
+			sort: [{ var: "color" }, { var: "person" }],
+		})
+		populateIndex(tx, {
+			name: "personByColor",
+			filter: [[[{ var: "person" }, { value: "color" }, { var: "color" }]]],
+			sort: [{ var: "color" }, { var: "person" }],
+		})
+		tx.commit()
+
+		assert.deepEqual(scanIndex(storage, { index: "personByColor" }), [
+			["blue", "chet"],
+			["green", "sean"],
+		])
+
+		tx = storage.transact()
+		const report = write(tx, {
+			set: [
+				["chet", "color", "blue"],
+				["meghan", "color", "yellow"],
+			],
+			remove: [["sean", "color", "green"]],
+		})
+		tx.commit()
+
+		assert.deepEqual(scanIndex(storage, { index: "personByColor" }), [
+			["blue", "chet"],
+			["yellow", "meghan"],
+		])
+	})
+
 	describe("ContactsDb", () => {
 		snapshotTest("prettyUpdateIndexesPlan", () => {
 			const storage = createContactsDb()
