@@ -8,8 +8,22 @@
 
 
 
-- data-type-ts / hyperstruct
 
+
+- data-type-ts / hyperstruct
+	- shorthand.ts
+	- gameCounter.test.ts
+
+// What if lists were built in?
+// - [e, a, o, v]
+// - [e, a, v, o]
+// - [a, v, e]
+// - [v, a, e]
+// - [e, v, a]
+
+
+- Maybe we should try the GameCounter state without the triplestore the first time around...
+	-
 
 
 - send tuples back and forth between a database in two different processes using traces and transactions.

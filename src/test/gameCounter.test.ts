@@ -1,11 +1,127 @@
 import { strict as assert } from "assert"
+import * as t from "data-type-ts"
 import { differenceWith } from "lodash"
 import { describe, it } from "mocha"
 import { compareValue } from "tuple-database/helpers/compareTuple"
 import { Triplestore } from "../database/Triplestore"
-import { Value } from "../database/types"
+import { Fact, Value } from "../database/types"
 
 const db = new Triplestore()
+
+const Player = t.object({
+	required: {
+		id: t.string,
+		name: t.string,
+		score: t.number,
+	},
+	optional: {},
+})
+
+const Game = t.object({
+	required: { id: t.string, players: t.array(Player) },
+	optional: {},
+})
+
+// id => {id} for the sake of duck typing.
+function gameToFacts(game: typeof Game["value"]) {
+	const facts: Fact[] = []
+
+	const playersListId = randomId()
+	facts.push([game.id, "players", playersListId])
+
+	for (let i = 0; i < game.players.length; i++) {
+		const player = game.players[i]
+		const playerItemId = randomId()
+		facts.push(
+			[playersListId, "item", playerItemId],
+			[playerItemId, "value", player.id],
+			[playerItemId, "order", i]
+		)
+
+		facts.push(
+			[player.id, "name", player.name],
+			[player.id, "score", player.score]
+		)
+	}
+
+	return facts
+}
+
+// What if lists were built in?
+// - [e, a, o, v]
+// - [e, a, v, o]
+// - [a, v, e]
+// - [v, a, e]
+// - [e, v, a]
+
+// - [doc tag red], [dog tag blue],
+//   [list entity dog], [list property tag], [list item item1], [item1 value red], [list item item2], [item2 value blue]
+
+function loadProperty<T>(
+	db: Triplestore,
+	id: string,
+	property: string,
+	schema: t.RuntimeDataType<T>
+): T {
+	// There's no reason we need to be married to the triplestore model. So long as we can build queries and build the
+	// application. Here, for example, we can just call `db.storage.scan({prefix: ["eav", id, property]})`.
+
+	// We can patch into this
+
+	const result = db.query({
+		filter: [[[{ value: id }, { value: property }, { var: "value" }]]],
+	})
+
+	const dataType = schema.dataType
+	if (dataType.type === "object") {
+	} else if (dataType.type === "array") {
+	} else if (dataType.type === "string") {
+	} else if (dataType.type === "number") {
+	} else if (dataType.type === "boolean") {
+	}
+
+	return {} as any
+}
+
+function loadObject<T>(
+	db: Triplestore,
+	id: string,
+	schema: t.RuntimeDataType<T>
+): T {
+	const dataType = schema.dataType
+	if (dataType.type === "object") {
+		dataType.required
+		dataType.optional
+	} else if (dataType.type === "array") {
+	}
+	return {} as any
+}
+
+// I like this idea -- of a declarative way to patch into an existing object.
+// It also allows you to decouple components completely while keeping them in sync.
+// At the end of the day, this is going to be a pretty general way of syncing / ingesting data.
+
+// function getGame(gameId: string): t.Infer<typeof Game> {
+// 	// const playersId = gameId + "/players"
+// 	// const playerIds = list(playersId).slice(0)
+// 	// playerIds.map(playerId => obj(playerId))
+// 	return {} as any
+// }
+
+// function updateGame(prev: t.Infer<typeof Game>, next: t.Infer<typeof Game>) {
+// 	// Diff games and update the model.
+// }
+
+// Game.schema
+// Player.schema
+
+// const obj2 = <T>(id: string, struct: s.Struct<T>): T & { id: string } => {
+// 	if (struct.type === "object") {
+// 	}
+
+// 	if (struct.type === "array") {
+// 	}
+// }
 
 const obj = (maybeId?: string) => {
 	const id = maybeId === undefined ? randomId() : maybeId
