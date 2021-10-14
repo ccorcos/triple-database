@@ -246,6 +246,58 @@ describe("OrderedTriplestore", () => {
 			p.score += 5
 			assert.deepEqual(p, { id: "player1", name: "Chester", score: 7 })
 		})
+
+		// it("proxy an array and enumerate it", () => {
+		// 	const numbers = [1, 2, 3]
+		// 	const list = new Proxy<number[]>([], {
+		// 		// This allows deepEqual to work.
+		// 		ownKeys: function () {
+		// 			return Object.getOwnPropertyNames(numbers)
+		// 		},
+		// 		getOwnPropertyDescriptor: (target, key) => {
+		// 			return {
+		// 				writable: key === "length",
+		// 				value: getProp(key),
+		// 				enumerable: key !== "length",
+		// 				configurable: key !== "length",
+		// 			}
+		// 		},
+		// 		get(target, prop) {
+		// 			return getProp(prop)
+		// 		},
+		// 	})
+		// })
+
+		it("proxyList", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
+
+			const p = proxyObj(db, game.id, GameObj)
+			assert.equal(p.players.length, 2)
+			assert.equal(p.players[0], player1.id)
+			assert.equal(p.players[1], player2.id)
+			assert.deepEqual(p.players, [player1.id, player2.id])
+			assert.deepEqual([...p.players], [player1.id, player2.id])
+
+			console.log("HERE", p.players)
+
+			// const players = proxyList(db, game.id, "players", t.string)
+			// assert.equal(players.length, 2)
+			// assert.deepEqual(players, [player1.id, player2.id])
+		})
+
+		// it("proxyList push()", () => {
+		// 	const db = new OrderedTriplestore()
+		// 	writeObj(db, game, GameObj)
+		// 	writeObj(db, player1, PlayerObj)
+		// 	writeObj(db, player2, PlayerObj)
+
+		// 	const players = proxyList(db, game.id, "players", t.array(PlayerObj))
+		// 	assert.equal(players.length, 2)
+		// 	assert.deepEqual(players, [player1.id, player2.id])
+		// })
 	})
 
 	// appendProp

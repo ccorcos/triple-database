@@ -269,6 +269,7 @@ export function proxyObj<T extends { id: string }>(
 	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Must be object schema.")
 
+	// TODO: refactor this out? Its different from readProp because this returns proxies.
 	const getProp = (prop: string | symbol) => {
 		if (typeof prop === "symbol") return undefined
 		if (!(prop in dataType.required)) return undefined
@@ -324,54 +325,99 @@ export function proxyList<T>(
 	if (dataType.type === "object") throw new Error("No nested objects, yet.")
 	if (dataType.type === "array") throw new Error("No nested array.")
 
-	return new Proxy([] as any, {
-		get(target, prop) {
-			if (typeof prop === "symbol") throw new Error("No symbols.")
-
-			if (prop === "length") {
-				const results = db.scan({ prefix: ["eaov", id, listProp] }).map(first)
-				return results.length
-			}
-
-			if (prop === "push")
-				return (value: any) => {
-					const error = t.validateDataType(dataType, value)
-					if (error) throw new Error(t.formatError(error))
-
-					const results = db
-						.scan({ prefix: ["eaov", id, listProp], reverse: true, limit: 1 })
+	const getProp = (prop: string | symbol) => {
+		if (typeof prop === "symbol") {
+			console.log("SYMBOL", prop)
+			// if (prop === Symbol.toStringTag) {
+			// 	const values = db
+			// 		.scan({ prefix: ["eaov", id, listProp] })
+			// 		.map(first)
+			// 		.map(last)
+			// 	return values[Symbol.toStringTag]
+			// }
+			if (prop === Symbol.iterator) {
+				return function* () {
+					// TODO: validate the schema here.
+					const values = db
+						.scan({ prefix: ["eaov", id, listProp] })
 						.map(first)
-
-					let index: number = 0
-					if (results.length !== 0) {
-						const order = single(results)[3]
-						const error = t.number.validate(order)
-						if (error) throw new Error(t.formatError(error))
-						index = order as any
-						index += 1
+						.map(last)
+					for (const value of values) {
+						yield value
 					}
-
-					composeTx(db, (tx) => {
-						tx.set(["eaov", id, listProp, index, value], null)
-					})
 				}
+			}
+			return undefined
+		}
 
-			// if (property === "splice")
-			// if (property === "insertAfter")
-			// if (property === "insertBelow")
-			// if (property === "remove...?")
+		if (prop === "length") {
+			const results = db.scan({ prefix: ["eaov", id, listProp] }).map(first)
+			return results.length
+		}
 
-			const n = parseInt(prop)
-			if (!isNaN(n)) {
-				const values = db
-					.scan({ prefix: ["eaov", id, listProp] })
-					.map(first)
-					.map(last)
-				const value = values[n]
+		if (prop === "push")
+			return (value: any) => {
 				const error = t.validateDataType(dataType, value)
 				if (error) throw new Error(t.formatError(error))
-				return value
+
+				const results = db
+					.scan({ prefix: ["eaov", id, listProp], reverse: true, limit: 1 })
+					.map(first)
+
+				let index: number = 0
+				if (results.length !== 0) {
+					const order = single(results)[3]
+					const error = t.number.validate(order)
+					if (error) throw new Error(t.formatError(error))
+					index = order as any
+					index += 1
+				}
+
+				composeTx(db, (tx) => {
+					tx.set(["eaov", id, listProp, index, value], null)
+				})
 			}
+
+		// if (prop === "map") {
+		// 	const values = db
+		// 		.scan({ prefix: ["eaov", id, listProp] })
+		// 		.map(first)
+		// 		.map(last)
+		// 	return values.map.bind(values)
+		// }
+		// if (property === "splice")
+		// if (property === "insertAfter")
+		// if (property === "insertBelow")
+		// if (property === "remove...?")
+
+		const n = parseInt(prop)
+		if (!isNaN(n)) {
+			const values = db
+				.scan({ prefix: ["eaov", id, listProp] })
+				.map(first)
+				.map(last)
+			const value = values[n]
+			const error = t.validateDataType(dataType, value)
+			if (error) throw new Error(t.formatError(error))
+			return value
+		}
+	}
+
+	return new Proxy([] as any, {
+		// This allows deepEqual to work.
+		ownKeys: function () {
+			return ["length"]
+		},
+		getOwnPropertyDescriptor: (target, key) => {
+			return {
+				writable: key === "length",
+				value: getProp(key),
+				enumerable: key !== "length",
+				configurable: key !== "length",
+			}
+		},
+		get(target, prop) {
+			return getProp(prop)
 		},
 	})
 }
