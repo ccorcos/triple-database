@@ -1,30 +1,21 @@
-// e, a, v, ea, ve, av
-// What if lists were built in?
-// - [e, a, o, v] -- list in order
-// - [e, a, v, o] --
-// - [a, v, e]
-// - [v, e, a] -- how are two objects related?
-// -
-
-import { strict as assert } from "assert"
 import * as t from "data-type-ts"
-import { describe, it } from "mocha"
-import { composeTx, transactional } from "tuple-database/helpers/transactional"
+import { composeTx } from "tuple-database/helpers/transactional"
 import { InMemoryStorage } from "tuple-database/storage/InMemoryStorage"
 import { ReactiveStorage } from "tuple-database/storage/ReactiveStorage"
 import {
 	ReadOnlyTupleStorage,
 	Transaction,
+	Tuple,
 	TupleStorage,
 	Value,
 } from "tuple-database/storage/types"
-import { randomId } from "../helpers/randomId"
-import { Tuple } from "../main"
+import { first, last, single } from "../helpers/listHelpers"
 
-class Database extends ReactiveStorage {
-	constructor() {
-		super(new InMemoryStorage())
-		// What if lists were built in?
+export class OrderedTriplestore extends ReactiveStorage {
+	constructor(storage?: TupleStorage) {
+		super(storage || new InMemoryStorage())
+		// What if ordered list functionality was built into a Triplestore?
+		// I don't like all the indirection needed to reify lists and list items with Triplestores.
 		//
 		// What indexes are we going to use? We need: e, a, v, ea, ve, av
 		// - [e, a, o, v]
@@ -51,27 +42,15 @@ class Database extends ReactiveStorage {
 	}
 }
 
-const PlayerObj = t.object({
-	required: {
-		id: t.string,
-		name: t.string,
-		score: t.number,
-	},
-	optional: {},
-})
+// This is the subset of JSON that we can represent.
+type Prop = string | number | boolean | Obj
 
-type Player = typeof PlayerObj.value
+type Obj = {
+	id: string
+	[key: string]: Prop | Prop[] // NOTE: no nested arrays.
+}
 
-const GameObj = t.object({
-	required: { id: t.string, players: t.array(t.string) },
-	optional: {},
-})
-
-type Game = typeof GameObj.value
-
-// TODO: better types for what an object really is. no nested arrays. objects have an id.
-//
-// Example of how objects serialize
+// Example of how objects serialize.
 // {
 // 	id: 1,
 // 	name: "chet",
@@ -85,11 +64,14 @@ type Game = typeof GameObj.value
 // ["eaov", 1, "wife", null, 2]
 // ["eaov", 2, "name", null, "meghan"]
 //
-function objToTuples<T extends { id: string }>(
+// You might think its inconvenient to require a schema definition here.
+// While it seems unnecessary here, it is absolutely necessarty when calling readObj.
+// And thus, it seems to make sense to validate data on its way into the database as well.
+export function objToTuples<T extends Obj>(
 	obj: T,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ) {
-	const dataType = schema.dataType
+	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Not an object schema.")
 
 	const tuples: Tuple[] = []
@@ -97,14 +79,15 @@ function objToTuples<T extends { id: string }>(
 	for (const [key, keySchema] of Object.entries(dataType.required)) {
 		if (key === "id") continue
 		if (keySchema.type === "array") {
-			const list: any[] = obj[key] as any
+			const list = obj[key]
+			if (!Array.isArray(list)) throw new Error("Schema != Obj.")
 
 			for (let i = 0; i < list.length; i++) {
 				const value = list[i]
 				const valueSchema = keySchema.inner
 
-				if (valueSchema.type === "array") throw new Error("No nested arrays.")
 				if (valueSchema.type === "object") {
+					if (typeof value !== "object") throw new Error("Schema != Obj")
 					tuples.push(["eaov", obj.id, key, i, value.id])
 					tuples.push(...objToTuples(value, new t.RuntimeDataType(valueSchema)))
 				} else if (
@@ -113,12 +96,16 @@ function objToTuples<T extends { id: string }>(
 					valueSchema.type === "boolean"
 				) {
 					tuples.push(["eaov", obj.id, key, i, value])
+				} else if (valueSchema.type === "array") {
+					throw new Error("No nested arrays.")
 				} else {
-					throw new Error("Invalid JSON schema type.")
+					throw new Error("Invalid schema type.")
 				}
 			}
 		} else if (keySchema.type === "object") {
-			const keyObj: { id: string } = obj[key] as any
+			const keyObj = obj[key]
+			if (typeof keyObj !== "object" || Array.isArray(keyObj))
+				throw new Error("Schema != Obj")
 
 			tuples.push(["eaov", obj.id, key, null, keyObj.id])
 			tuples.push(...objToTuples(keyObj, new t.RuntimeDataType(keySchema)))
@@ -127,78 +114,38 @@ function objToTuples<T extends { id: string }>(
 			keySchema.type === "number" ||
 			keySchema.type === "boolean"
 		) {
-			const value = obj[key] as any
+			const value = obj[key]
+			if (typeof value !== keySchema.type) throw new Error("Schema != Obj")
 			tuples.push(["eaov", obj.id, key, null, value])
 		} else {
-			throw new Error("Invalid JSON schema type.")
+			throw new Error("Invalid schema type.")
 		}
 	}
 	return tuples
 }
 
-// Enforces that that the array is length 1 and that
-// TODO: accept a schema in here to validate.
-function single<T>(values: T[]): T {
-	if (values.length !== 1)
-		throw new Error("Too many values: " + JSON.stringify(values))
-	return values[0]
-}
-
-// Returns the first value. Useful when we don't care about the value in the tuplestore.
-function first<T extends any[]>(tuple: T): T[0] {
-	if (tuple.length === 0) throw new Error("Can't call first on empty.")
-	return tuple[0]
-}
-
-function last<T>(tuple: T[]): T {
-	if (tuple.length === 0) throw new Error("Can't call last on empty.")
-	return tuple[tuple.length - 1]
-}
-
-function readValue<T>(
+// Opposite of `objToTuples`.
+// Read the database for a given object id and create the object defined by a schema.
+export function readObj<T extends Obj>(
 	db: ReadOnlyTupleStorage,
-	values: Value[],
-	schema: t.RuntimeDataType<T>
-) {
-	const dataType = schema.dataType
-	if (dataType.type === "array") {
-		// NOTE: a list of lists is not going to work!
-		// Solution would be an "EAO*V" index.
-		const inner = new t.RuntimeDataType(dataType.inner)
-		return values.map((value) => readValue(db, [value], inner))
+	id: string,
+	schema: t.RuntimeDataType<T> | t.DataType
+): T {
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	if (dataType.type !== "object") throw new Error("Not an object schema.")
+
+	const obj: any = { id }
+	for (const [key, keySchema] of Object.entries(dataType.required)) {
+		obj[key] = readProp(db, id, key, keySchema)
 	}
-
-	const value = single(values)
-
-	if (dataType.type === "object") {
-		if (typeof value !== "string") throw new Error("Object id is not a string.")
-		return readObj(db, value, schema as any)
-	}
-
-	if (dataType.type === "number") {
-		if (typeof value !== "number") throw new Error("Value should be a number.")
-		return value
-	}
-
-	if (dataType.type === "string") {
-		if (typeof value !== "string") throw new Error("Value should be a string.")
-		return value
-	}
-
-	if (dataType.type === "boolean") {
-		if (typeof value !== "boolean")
-			throw new Error("Value should be a boolean.")
-		return value
-	}
-
-	throw new Error("Unsupported DataType: " + dataType.type)
+	return obj
 }
 
 function readProp<T>(
 	db: ReadOnlyTupleStorage,
 	id: string,
 	prop: string,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ) {
 	if (prop === "id") return id
 
@@ -209,24 +156,44 @@ function readProp<T>(
 	return readValue(db, values, schema)
 }
 
-function readObj<T extends { id: string }>(
+function readValue<T>(
 	db: ReadOnlyTupleStorage,
-	id: string,
-	schema: t.RuntimeDataType<T>
+	values: Value[],
+	schema: t.RuntimeDataType<T> | t.DataType
 ): T {
-	const dataType = schema.dataType
-	if (dataType.type !== "object") throw new Error("Not an object schema.")
-	const obj = { id } as any
-	for (const [key, keySchema] of Object.entries(dataType.required)) {
-		obj[key] = readProp(db, id, key, new t.RuntimeDataType(keySchema))
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	if (dataType.type === "array") {
+		// NOTE: a list of lists is not going to work!
+		// Solution would be an "EAO*V" index.
+		const inner = new t.RuntimeDataType(dataType.inner)
+		return values.map((value) => readValue(db, [value], inner)) as any
 	}
-	return obj
+
+	const value = single(values)
+
+	if (dataType.type === "object") {
+		if (typeof value !== "string")
+			throw new Error("Object reference should be a string.")
+		return readObj(db, value, dataType) as any
+	}
+
+	if (
+		dataType.type === "number" ||
+		dataType.type === "string" ||
+		dataType.type === "boolean"
+	) {
+		const error = t.validateDataType(dataType, value)
+		if (error) throw new Error(t.formatError(error))
+		return value as any
+	}
+
+	throw new Error("Unsupported schema: " + dataType.type)
 }
 
-function writeObj<T extends { id: string }>(
+export function writeObj<T extends { id: string }>(
 	dbOrTx: TupleStorage | Transaction,
 	obj: T,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ) {
 	return composeTx(dbOrTx, (tx) => {
 		const facts = objToTuples(obj, schema)
@@ -234,93 +201,48 @@ function writeObj<T extends { id: string }>(
 	})
 }
 
-function deleteObj<T extends { id: string }>(
+// // Delete obj doesn't require a schema because we also handle inverse relationships
+// // and it just extra save to get all of the id references cleaned up.
+export function hardDeleteObj(
 	dbOrTx: TupleStorage | Transaction,
-	id: string
+	id: string,
+	backlinks = false
 ) {
 	return composeTx(dbOrTx, (tx) => {
 		const objectProperties = tx.scan({ prefix: ["eaov", id] }).map(first)
 		tx.write({ remove: objectProperties })
 
-		const inverseRelationships = tx.scan({ prefix: ["vaeo", id] }).map(first)
-		tx.write({ remove: inverseRelationships })
+		if (backlinks) {
+			const inverseRelationships = tx
+				.scan({ prefix: ["vaeo", id] })
+				.map(first)
+				.map(([vaeo, v, a, e, o]) => ["eaov", e, a, o, v] as Tuple)
+			tx.write({ remove: inverseRelationships })
+		}
 	})
 }
 
-const gameId = "theOnlyGame"
-
-const addPlayer = transactional((tx) => {
-	const player: Player = { id: randomId(), name: "", score: 0 }
-	writeObj(tx, player, PlayerObj)
-
-	const game = proxyObj(tx, gameId, GameObj)
-	game.players.push(player.id)
-
-	return player.id
-})
-
-const deletePlayer = transactional((tx, id: string) => {
-	deleteObj(tx, id)
-})
-
-const setPlayerName = transactional((tx, id: string, newName: string) => {
-	const player = proxyObj(tx, id, PlayerObj)
-	player.name = newName
-})
-
-const incrementScore = transactional((tx, id: string, delta: number) => {
-	const player = proxyObj(tx, id, PlayerObj)
-	player.score += delta
-})
-
-const resetGame = transactional((tx) => {
-	deleteObj(tx, gameId)
-	addPlayer(tx)
-})
-
-describe("normalizedDataActions", () => {
-	it("works", () => {
-		const db = new Database()
-
-		resetGame(db)
-		const game = readObj(db, gameId, GameObj)
-
-		const player1 = game.players[0]
-		const player2 = addPlayer(db)
-
-		setPlayerName(db, player1, "Chet")
-		incrementScore(db, player1, 6)
-
-		setPlayerName(db, player2, "Meghan")
-		incrementScore(db, player2, 9)
-
-		assert.deepEqual(readObj(db, gameId, GameObj), {
-			id: game.id,
-			players: [player1, player2],
-		})
-
-		assert.deepEqual(readObj(db, player1, PlayerObj), {
-			id: player1,
-			name: "Chet",
-			score: 6,
-		})
-
-		assert.deepEqual(readObj(db, player2, PlayerObj), {
-			id: player2,
-			name: "Meghan",
-			score: 9,
-		})
+export function deleteObj<T extends Obj>(
+	dbOrTx: TupleStorage | Transaction,
+	id: string,
+	schema: t.RuntimeDataType<T> | t.DataType
+) {
+	return composeTx(dbOrTx, (tx) => {
+		const obj = readObj(tx, id, schema)
+		const tuples = objToTuples(obj, schema)
+		tx.write({ remove: tuples })
 	})
-})
+}
 
-function setProp<T>(
+export function setProp<T>(
 	dbOrTx: TupleStorage | Transaction,
 	id: string,
 	property: string,
 	value: any,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ) {
-	const error = schema.validate(value)
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	const error = t.validateDataType(dataType, value)
 	if (error) throw new Error(t.formatError(error))
 	return composeTx(dbOrTx, (tx) => {
 		const existing = tx.scan({ prefix: ["eaov", id, property] }).map(first)
@@ -462,91 +384,3 @@ function subscribeObj<T extends { id: string }>(
 
 	return [obj, unsubscribe] as const
 }
-
-describe("subscribeObj", () => {
-	it("works", () => {
-		const db = new Database()
-
-		resetGame(db)
-
-		let game: Game
-		const [initialGame, unsubscribe] = subscribeObj(
-			db,
-			gameId,
-			GameObj,
-			(newGame) => {
-				game = newGame
-			}
-		)
-		game = initialGame
-
-		const player1Id = game.players[0]
-		const player2Id = addPlayer(db)
-
-		let player1: Player
-		const [initialPlayer1, unsubscribe1] = subscribeObj(
-			db,
-			player1Id,
-			PlayerObj,
-			(newPlayer1) => {
-				player1 = newPlayer1
-			}
-		)
-		player1 = initialPlayer1
-
-		let player2: Player
-		const [initialPlayer2, unsubscribe2] = subscribeObj(
-			db,
-			player2Id,
-			PlayerObj,
-			(newPlayer2) => {
-				player2 = newPlayer2
-			}
-		)
-		player2 = initialPlayer2
-
-		setPlayerName(db, player1Id, "Chet")
-		incrementScore(db, player1Id, 6)
-
-		setPlayerName(db, player2Id, "Meghan")
-		incrementScore(db, player2Id, 9)
-
-		assert.deepEqual(game, {
-			id: game.id,
-			players: [player1Id, player2Id],
-		})
-
-		assert.deepEqual(player1, {
-			id: player1Id,
-			name: "Chet",
-			score: 6,
-		})
-
-		assert.deepEqual(player2, {
-			id: player2Id,
-			name: "Meghan",
-			score: 9,
-		})
-	})
-})
-
-// ============================================================================
-//
-// We have the following utility functions:
-//
-// - objToTuples
-// - readObj
-// - writeObj
-// - deleteObj
-// - typed mutations
-//   - add/remove list
-//   - set property-value
-// - listen for changes
-// - reconstruct the objects
-//
-// Looking good. What now?
-// Lets actually swap out the data model in the Game Counter app
-// - tests in the game counter (and the boilerplate app).
-// - write tests for all these utilities.
-// -
-//
