@@ -269,23 +269,38 @@ export function proxyObj<T extends { id: string }>(
 	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Must be object schema.")
 
+	const getProp = (prop: string | symbol) => {
+		if (typeof prop === "symbol") return undefined
+		if (!(prop in dataType.required)) return undefined
+		const propType = dataType.required[prop]
+
+		if (propType.type === "object") {
+			throw new Error("No nested objects, yet.")
+			// const otherId = readProp(db, id, prop, t.string)
+			// return proxyObj(db, otherId, propType)
+		}
+
+		if (propType.type === "array") {
+			return proxyList(db, id, prop, propType.inner)
+		}
+
+		return readProp(db, id, prop, propType)
+	}
+
 	return new Proxy<T>({} as any, {
+		// This allows deepEqual to work.
+		ownKeys: function () {
+			return Object.keys(dataType.required)
+		},
+		getOwnPropertyDescriptor: (target, key) => {
+			return {
+				value: getProp(key),
+				enumerable: true,
+				configurable: true,
+			}
+		},
 		get(target, prop) {
-			if (typeof prop === "symbol") return undefined
-			if (!(prop in dataType.required)) return undefined
-			const propType = dataType.required[prop]
-
-			if (propType.type === "object") {
-				throw new Error("No nested objects, yet.")
-				// const otherId = readProp(db, id, prop, t.string)
-				// return proxyObj(db, otherId, propType)
-			}
-
-			if (propType.type === "array") {
-				return proxyList(db, id, prop, propType.inner)
-			}
-
-			return readProp(db, id, prop, propType)
+			return getProp(prop)
 		},
 		set(target, prop, value) {
 			if (typeof prop === "symbol") throw new Error("No symbols.")

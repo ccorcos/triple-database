@@ -183,7 +183,7 @@ describe("OrderedTriplestore", () => {
 		assert.equal(g.players[1].score, 3)
 	})
 
-	it("proxyObj ", () => {
+	describe("flattened schema", () => {
 		// Flattened out schema.
 		const PlayerObj = t.object({
 			required: {
@@ -205,28 +205,47 @@ describe("OrderedTriplestore", () => {
 		const player1: Player = { id: "player1", name: "Chet", score: 2 }
 		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
 		const game: Game = { id: "game1", players: [player1.id, player2.id] }
-		const db = new OrderedTriplestore()
-		writeObj(db, game, GameObj)
-		writeObj(db, player1, PlayerObj)
-		writeObj(db, player2, PlayerObj)
 
-		const g = proxyObj(db, game.id, GameObj)
+		it("proxyObj read", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
 
-		assert.equal(g.id, game.id)
-		assert.equal(g.players.length, 2)
-		assert.equal(g.players[0], "player1")
-		assert.equal(g.players[1], "player2")
+			const g = proxyObj(db, game.id, GameObj)
 
-		const p1 = proxyObj(db, player1.id, PlayerObj)
-		const p2 = proxyObj(db, player2.id, PlayerObj)
+			assert.equal(g.id, game.id)
+			assert.equal(g.players.length, 2)
+			assert.equal(g.players[0], "player1")
+			assert.equal(g.players[1], "player2")
 
-		assert.equal(p1.id, "player1")
-		assert.equal(p1.name, "Chet")
-		assert.equal(p1.score, 2)
+			const p1 = proxyObj(db, player1.id, PlayerObj)
+			const p2 = proxyObj(db, player2.id, PlayerObj)
 
-		assert.equal(p2.id, "player2")
-		assert.equal(p2.name, "Meghan")
-		assert.equal(p2.score, 3)
+			assert.equal(p1.id, "player1")
+			assert.equal(p1.name, "Chet")
+			assert.equal(p1.score, 2)
+
+			assert.equal(p2.id, "player2")
+			assert.equal(p2.name, "Meghan")
+			assert.equal(p2.score, 3)
+		})
+
+		// TODO: this is failing, I think, because we need to be able to iterate properties
+		// on the proxied object.
+		it("proxyObj read and write", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, player1, PlayerObj)
+
+			const p = proxyObj(db, player1.id, PlayerObj)
+			assert.deepEqual(p, player1)
+
+			p.name = "Chester"
+			assert.deepEqual(p, { id: "player1", name: "Chester", score: 2 })
+
+			p.score += 5
+			assert.deepEqual(p, { id: "player1", name: "Chester", score: 7 })
+		})
 	})
 
 	// appendProp
