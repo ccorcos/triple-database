@@ -353,7 +353,7 @@ function setProp<T>(
 	schema: t.RuntimeDataType<T>
 ) {
 	const error = schema.validate(value)
-	if (error) throw error
+	if (error) throw new Error(t.formatError(error))
 	return composeTx(dbOrTx, (tx) => {
 		const existing = tx.scan({ prefix: ["eaov", id, property] }).map(first)
 		tx.write({ remove: existing })
@@ -379,7 +379,8 @@ function proxyObj<T extends { id: string }>(
 				throw new Error("No nested objects, yet.")
 
 			if (propSchema.dataType.type === "array") {
-				return proxyList(db, id, prop, propSchema)
+				const innerSchema = new t.RuntimeDataType(propSchema.dataType.inner)
+				return proxyList(db, id, prop, innerSchema)
 			}
 
 			const value = readProp(db, id, prop, propSchema)
@@ -427,7 +428,7 @@ function proxyList<T>(
 			if (prop === "push")
 				return (value: any) => {
 					const error = schema.validate(value)
-					if (error) throw error
+					if (error) throw new Error(t.formatError(error))
 
 					const results = db
 						.scan({ prefix: ["eaov", id, listProp], reverse: true, limit: 1 })
@@ -435,10 +436,11 @@ function proxyList<T>(
 
 					let index: number = 0
 					if (results.length !== 0) {
-						const order = single(results)[2]
+						const order = single(results)[3]
 						const error = t.number.validate(order)
-						if (error) throw error
+						if (error) throw new Error(t.formatError(error))
 						index = order as any
+						index += 1
 					}
 
 					composeTx(db, (tx) => {
@@ -459,7 +461,7 @@ function proxyList<T>(
 					.map(last)
 				const value = values[n]
 				const error = schema.validate(value)
-				if (error) throw error
+				if (error) throw new Error(t.formatError(error))
 				return value
 			}
 		},
