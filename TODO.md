@@ -1,5 +1,24 @@
 ## TODO
 
+
+We have the following utility functions:
+- readObj
+- writeObj
+	- objToTuples
+- deleteObj
+
+Next:
+- typed mutations
+  - add/remove list
+  - set property-value
+- listen for changes to objects
+
+- break up the objects so that game doesn't fetch player and its just an id.
+- id => { id: string }
+
+
+---
+
 - readme
 	- explain how it all works
 	- install tuple-database as a peer dependency
