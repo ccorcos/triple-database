@@ -1,6 +1,10 @@
 ## TODO
 
 
+Game Plan:
+- don't need to immutably update a deep json object. also don't need to diff necessarily either.
+-
+
 We have the following utility functions:
 - readObj
 - writeObj
@@ -8,13 +12,14 @@ We have the following utility functions:
 - deleteObj
 
 Next:
-- typed mutations
+- `typed mutations using proxies.`
   - add/remove list
   - set property-value
 - listen for changes to objects
 
 - break up the objects so that game doesn't fetch player and its just an id.
 - id => { id: string }
+
 
 
 ---
