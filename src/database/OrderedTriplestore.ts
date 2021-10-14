@@ -234,47 +234,58 @@ export function deleteObj<T extends Obj>(
 	})
 }
 
-export function setProp<T>(
+export function setProp<O extends Obj, T extends keyof O>(
 	dbOrTx: TupleStorage | Transaction,
 	id: string,
-	property: string,
-	value: any,
-	schema: t.RuntimeDataType<T> | t.DataType
+	property: T,
+	value: O[T],
+	schema: t.RuntimeDataType<O> | t.DataType
 ) {
 	const dataType = "dataType" in schema ? schema.dataType : schema
-	const error = t.validateDataType(dataType, value)
+	if (dataType.type !== "object")
+		throw new Error("Set prop must be on an object schema.")
+
+	const prop = property as number | string // just not symbol
+	const propType = dataType.required[prop]
+
+	if (propType.type === "object") throw new Error("No nested objects, yet.")
+	if (propType.type === "array")
+		throw new Error("Call the array mutation methods instead.")
+
+	const error = t.validateDataType(propType, value)
 	if (error) throw new Error(t.formatError(error))
 	return composeTx(dbOrTx, (tx) => {
-		const existing = tx.scan({ prefix: ["eaov", id, property] }).map(first)
+		const existing = tx.scan({ prefix: ["eaov", id, prop] }).map(first)
 		tx.write({ remove: existing })
-		tx.set(["eaov", id, property, null, value], null)
+		tx.set(["eaov", id, prop, null, value], null)
 	})
 }
 
-function proxyObj<T extends { id: string }>(
+export function proxyObj<T extends { id: string }>(
 	db: TupleStorage | Transaction,
 	id: string,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ): T {
-	const dataType = schema.dataType
+	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Must be object schema.")
 
 	return new Proxy<T>({} as any, {
 		get(target, prop) {
 			if (typeof prop === "symbol") return undefined
 			if (!(prop in dataType.required)) return undefined
-			const propSchema = new t.RuntimeDataType(dataType.required[prop])
+			const propType = dataType.required[prop]
 
-			if (propSchema.dataType.type === "object")
+			if (propType.type === "object") {
 				throw new Error("No nested objects, yet.")
-
-			if (propSchema.dataType.type === "array") {
-				const innerSchema = new t.RuntimeDataType(propSchema.dataType.inner)
-				return proxyList(db, id, prop, innerSchema)
+				// const otherId = readProp(db, id, prop, t.string)
+				// return proxyObj(db, otherId, propType)
 			}
 
-			const value = readProp(db, id, prop, propSchema)
-			return value
+			if (propType.type === "array") {
+				return proxyList(db, id, prop, propType.inner)
+			}
+
+			return readProp(db, id, prop, propType)
 		},
 		set(target, prop, value) {
 			if (typeof prop === "symbol") throw new Error("No symbols.")
@@ -282,27 +293,19 @@ function proxyObj<T extends { id: string }>(
 			if (!(prop in dataType.required))
 				throw new Error("Invalid property for schema.")
 
-			const propSchema = new t.RuntimeDataType(dataType.required[prop])
-
-			if (propSchema.dataType.type === "object")
-				throw new Error("No nested objects, yet.")
-
-			if (propSchema.dataType.type === "array")
-				throw new Error("Call the array mutation methods instead.")
-
-			setProp(db, id, prop, value, propSchema)
+			setProp(db, id, prop, value, dataType)
 			return true
 		},
 	})
 }
 
-function proxyList<T>(
+export function proxyList<T>(
 	db: TupleStorage | Transaction,
 	id: string,
 	listProp: string,
-	schema: t.RuntimeDataType<T>
+	schema: t.RuntimeDataType<T> | t.DataType
 ): T[] {
-	const dataType = schema.dataType
+	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type === "object") throw new Error("No nested objects, yet.")
 	if (dataType.type === "array") throw new Error("No nested array.")
 
@@ -317,7 +320,7 @@ function proxyList<T>(
 
 			if (prop === "push")
 				return (value: any) => {
-					const error = schema.validate(value)
+					const error = t.validateDataType(dataType, value)
 					if (error) throw new Error(t.formatError(error))
 
 					const results = db
@@ -350,7 +353,7 @@ function proxyList<T>(
 					.map(first)
 					.map(last)
 				const value = values[n]
-				const error = schema.validate(value)
+				const error = t.validateDataType(dataType, value)
 				if (error) throw new Error(t.formatError(error))
 				return value
 			}
@@ -358,7 +361,7 @@ function proxyList<T>(
 	})
 }
 
-function subscribeObj<T extends { id: string }>(
+export function subscribeObj<T extends { id: string }>(
 	db: ReactiveStorage,
 	id: string,
 	schema: t.RuntimeDataType<T>,

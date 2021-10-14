@@ -7,7 +7,9 @@ import {
 	hardDeleteObj,
 	objToTuples,
 	OrderedTriplestore,
+	proxyObj,
 	readObj,
+	setProp,
 	writeObj,
 } from "./OrderedTriplestore"
 
@@ -76,6 +78,7 @@ describe("OrderedTriplestore", () => {
 		assert.ok(game !== game2)
 		assert.deepEqual(game, game2)
 	})
+	it.skip("writeObj + readObj with optional properties", () => {})
 
 	it("deleteObj", () => {
 		const game: Game = {
@@ -89,9 +92,6 @@ describe("OrderedTriplestore", () => {
 		const db = new OrderedTriplestore()
 		writeObj(db, game, GameObj)
 		const game2 = readObj(db, game.id, GameObj)
-
-		// TODO: assert typeof game2 is not any!
-		type SameType = Assert<typeof game2, Game>
 
 		assert.ok(game !== game2)
 		assert.deepEqual(game, game2)
@@ -110,6 +110,8 @@ describe("OrderedTriplestore", () => {
 		// })
 	})
 
+	it("deleteObj with optional properties", () => {})
+
 	it("hardDeleteObj", () => {
 		const player1: Player = { id: "player1", name: "Chet", score: 2 }
 		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
@@ -122,9 +124,6 @@ describe("OrderedTriplestore", () => {
 		const db = new OrderedTriplestore()
 		writeObj(db, game, GameObj)
 		const game2 = readObj(db, game.id, GameObj)
-
-		// TODO: assert typeof game2 is not any!
-		type SameType = Assert<typeof game2, Game>
 
 		assert.ok(game !== game2)
 		assert.deepEqual(game, game2)
@@ -140,7 +139,95 @@ describe("OrderedTriplestore", () => {
 		assert.deepEqual(db.scan(), [])
 	})
 
-	// setProp
+	describe("setProp", () => {
+		it("string", () => {
+			const player1: Player = { id: "player1", name: "Chet", score: 2 }
+			const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+			const game: Game = { id: "game1", players: [player1, player2] }
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+
+			setProp(db, player1.id, "name", "Chester", PlayerObj)
+			assert.throws(() => {
+				// @ts-expect-error
+				setProp(db, player1.id, "name2", "Chester", PlayerObj)
+			})
+
+			const newPlayer1 = readObj(db, player1.id, PlayerObj)
+			assert.deepEqual(newPlayer1, { id: "player1", name: "Chester", score: 2 })
+		})
+
+		it.skip("object", () => {})
+		it.skip("array", () => {})
+		it.skip("optional properties", () => {})
+	})
+
+	it.skip("appendProp", () => {})
+
+	it.skip("proxyObj nested objects", () => {
+		const player1: Player = { id: "player1", name: "Chet", score: 2 }
+		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+		const game: Game = { id: "game1", players: [player1, player2] }
+		const db = new OrderedTriplestore()
+		writeObj(db, game, GameObj)
+
+		const g = proxyObj(db, game.id, GameObj)
+
+		assert.equal(g.id, game.id)
+		assert.equal(g.players.length, 2)
+		assert.equal(g.players[0].id, "player1")
+		assert.equal(g.players[0].name, "Chet")
+		assert.equal(g.players[0].score, 2)
+		assert.equal(g.players[1].id, "player2")
+		assert.equal(g.players[1].name, "Meghan")
+		assert.equal(g.players[1].score, 3)
+	})
+
+	it("proxyObj ", () => {
+		// Flattened out schema.
+		const PlayerObj = t.object({
+			required: {
+				id: t.string,
+				name: t.string,
+				score: t.number,
+			},
+			optional: {},
+		})
+		const GameObj = t.object({
+			required: { id: t.string, players: t.array(t.string) },
+			optional: {},
+		})
+
+		type Game = typeof GameObj.value
+
+		type Player = typeof PlayerObj.value
+
+		const player1: Player = { id: "player1", name: "Chet", score: 2 }
+		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+		const game: Game = { id: "game1", players: [player1.id, player2.id] }
+		const db = new OrderedTriplestore()
+		writeObj(db, game, GameObj)
+		writeObj(db, player1, PlayerObj)
+		writeObj(db, player2, PlayerObj)
+
+		const g = proxyObj(db, game.id, GameObj)
+
+		assert.equal(g.id, game.id)
+		assert.equal(g.players.length, 2)
+		assert.equal(g.players[0], "player1")
+		assert.equal(g.players[1], "player2")
+
+		const p1 = proxyObj(db, player1.id, PlayerObj)
+		const p2 = proxyObj(db, player2.id, PlayerObj)
+
+		assert.equal(p1.id, "player1")
+		assert.equal(p1.name, "Chet")
+		assert.equal(p1.score, 2)
+
+		assert.equal(p2.id, "player2")
+		assert.equal(p2.name, "Meghan")
+		assert.equal(p2.score, 3)
+	})
 
 	// appendProp
 	// proxyObj
