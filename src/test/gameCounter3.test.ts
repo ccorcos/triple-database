@@ -63,7 +63,7 @@ const PlayerObj = t.object({
 type Player = typeof PlayerObj.value
 
 const GameObj = t.object({
-	required: { id: t.string, players: t.array(PlayerObj) },
+	required: { id: t.string, players: t.array(t.string) },
 	optional: {},
 })
 
@@ -267,12 +267,8 @@ const addPlayer = transactional((tx) => {
 	const player: Player = { id: randomId(), name: "", score: 0 }
 	writeObj(tx, player, PlayerObj)
 
-	// const game = wrap(gameId, GameObj)
-	// game.players.push(player.id)
-
-	// TODO: this needs to be more type-constrained.
-	const nextIndex = getNextIndex(tx, [gameId, "players"])
-	tx.set(["eaov", gameId, "players", nextIndex, player.id], null)
+	const game = proxyObj(tx, gameId, GameObj)
+	game.players.push(player.id)
 
 	return player.id
 })
@@ -282,22 +278,13 @@ const deletePlayer = transactional((tx, id: string) => {
 })
 
 const setPlayerName = transactional((tx, id: string, newName: string) => {
-	// const player = wrap(id, PlayerObj)
-	// player.name = newName
-
-	const names = tx.scan({ prefix: ["eaov", id, "name"] }).map(first)
-	tx.write({ remove: names })
-	tx.set(["eaov", id, "name", null, newName], null)
+	const player = proxyObj(tx, id, PlayerObj)
+	player.name = newName
 })
 
 const incrementScore = transactional((tx, id: string, delta: number) => {
-	// const player = wrap(id, PlayerObj)
-	// player.score += delta
-
-	const scores = tx.scan({ prefix: ["eaov", id, "score"] }).map(first)
-	tx.write({ remove: scores })
-	const currentScore: number = single(scores.map((tuple) => tuple[4])) as any
-	tx.set(["eaov", id, "score", null, currentScore + delta], null)
+	const player = proxyObj(tx, id, PlayerObj)
+	player.score += delta
 })
 
 const resetGame = transactional((tx) => {
@@ -323,14 +310,14 @@ const resetGame = transactional((tx) => {
 // - break up the object queries/listeners.
 //
 
-describe("transactionalActions", () => {
+describe("normalizedDataActions", () => {
 	it("works", () => {
 		const db = new Database()
 
 		resetGame(db)
 		const game = readObj(db, gameId, GameObj)
 
-		const player1 = game.players[0].id
+		const player1 = game.players[0]
 		const player2 = addPlayer(db)
 
 		setPlayerName(db, player1, "Chet")
@@ -341,10 +328,19 @@ describe("transactionalActions", () => {
 
 		assert.deepEqual(readObj(db, gameId, GameObj), {
 			id: game.id,
-			players: [
-				{ id: player1, name: "Chet", score: 6 },
-				{ id: player2, name: "Meghan", score: 9 },
-			],
+			players: [player1, player2],
+		})
+
+		assert.deepEqual(readObj(db, player1, PlayerObj), {
+			id: player1,
+			name: "Chet",
+			score: 6,
+		})
+
+		assert.deepEqual(readObj(db, player2, PlayerObj), {
+			id: player2,
+			name: "Meghan",
+			score: 9,
 		})
 	})
 })
