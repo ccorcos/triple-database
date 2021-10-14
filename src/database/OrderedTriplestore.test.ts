@@ -4,6 +4,7 @@ import { describe, it } from "mocha"
 import { Assert } from "../helpers/typeHelpers"
 import {
 	deleteObj,
+	hardDeleteObj,
 	objToTuples,
 	OrderedTriplestore,
 	readObj,
@@ -28,6 +29,8 @@ const GameObj = t.object({
 })
 
 type Game = typeof GameObj.value
+
+type Player = typeof PlayerObj.value
 
 describe("OrderedTriplestore", () => {
 	it("works", () => {
@@ -107,8 +110,36 @@ describe("OrderedTriplestore", () => {
 		// })
 	})
 
-	// hardDeleteObj
-	// deleteObj
+	it("hardDeleteObj", () => {
+		const player1: Player = { id: "player1", name: "Chet", score: 2 }
+		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+
+		const game: Game = {
+			id: "game1",
+			players: [player1, player2],
+		}
+
+		const db = new OrderedTriplestore()
+		writeObj(db, game, GameObj)
+		const game2 = readObj(db, game.id, GameObj)
+
+		// TODO: assert typeof game2 is not any!
+		type SameType = Assert<typeof game2, Game>
+
+		assert.ok(game !== game2)
+		assert.deepEqual(game, game2)
+
+		// NOTE: this does not delete the players!
+		hardDeleteObj(db, game.id)
+		assert.ok(db.scan().length > 0)
+
+		hardDeleteObj(db, player1.id)
+		assert.ok(db.scan().length > 0)
+
+		hardDeleteObj(db, player2.id)
+		assert.deepEqual(db.scan(), [])
+	})
+
 	// setProp
 
 	// appendProp
