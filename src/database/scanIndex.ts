@@ -37,8 +37,8 @@ export function subscribeIndex(
 	return storage.subscribe(scanArgs, (writes) => {
 		// indexes.indexesByName, index.name, "data"
 		return callback({
-			sets: writes.sets.map(([tuple]) => tuple.slice(3)),
-			removes: writes.removes.map((tuple) => tuple.slice(3)),
+			sets: (writes.set || []).map(([tuple]) => tuple.slice(3)),
+			removes: (writes.remove || []).map((tuple) => tuple.slice(3)),
 		})
 	})
 }

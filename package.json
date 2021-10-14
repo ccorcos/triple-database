@@ -16,17 +16,17 @@
     "release": "./release.sh"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^5.4.1",
-    "@types/fs-extra": "^9.0.8",
-    "@types/lodash": "^4.14.168",
-    "@types/mocha": "whitecolor/mocha-types",
-    "@types/node": "^14.14.31",
+    "@types/better-sqlite3": "^5.4.3",
+    "@types/fs-extra": "^9.0.13",
+    "@types/lodash": "^4.14.175",
+    "@types/mocha": "github:whitecolor/mocha-types",
+    "@types/node": "^14.17.26",
     "fs-extra": "^9.1.0",
-    "mocha": "^8.3.0",
-    "prettier": "^2.2.1",
+    "mocha": "^8.4.0",
+    "prettier": "^2.4.1",
     "ts-node": "^9.1.1",
-    "tuple-database": "^1.2.4",
-    "typescript": "^4.2.2"
+    "tuple-database": "^1.2.5",
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
     "better-sqlite3": "^7.1.2",
