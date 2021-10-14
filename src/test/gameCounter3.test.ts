@@ -292,24 +292,6 @@ const resetGame = transactional((tx) => {
 	addPlayer(tx)
 })
 
-// ============================================================================
-//
-// We have the following utility functions:
-//
-// - objToTuples
-// - readObj
-// - writeObj
-// - deleteObj
-//
-// Where are we?
-// - typed mutations
-//   - add/remove list
-//   - set property-value
-// - reconstruct the objects
-// - listen for changes
-// - break up the object queries/listeners.
-//
-
 describe("normalizedDataActions", () => {
 	it("works", () => {
 		const db = new Database()
@@ -467,3 +449,116 @@ function proxyList<T>(
 		},
 	})
 }
+
+// ============================================================================
+//
+// We have the following utility functions:
+//
+// - objToTuples
+// - readObj
+// - writeObj
+// - deleteObj
+// - typed mutations
+//   - add/remove list
+//   - set property-value
+//  HERE
+// - reconstruct the objects
+// - listen for changes
+// - break up the object queries/listeners.
+//
+
+// subscribe object.
+
+function subscribeObj<T extends { id: string }>(
+	db: ReactiveStorage,
+	id: string,
+	schema: t.RuntimeDataType<T>,
+	callback: (obj: T) => void
+) {
+	if (schema.dataType.type !== "object")
+		throw new Error("Schema should be an object.")
+
+	let obj = readObj(db, id, schema)
+
+	const unsubscribes = new Set<() => void>()
+	for (const [prop, propType] of Object.entries(schema.dataType.required)) {
+		unsubscribes.add(
+			db.subscribe({ prefix: ["eaov", id, prop] }, (writes) => {
+				const value = readProp(db, id, prop, new t.RuntimeDataType(propType))
+				obj = { ...obj, [prop]: value }
+				callback(obj)
+			})
+		)
+	}
+
+	const unsubscribe = () => unsubscribes.forEach((fn) => fn())
+
+	return [obj, unsubscribe] as const
+}
+
+describe("subscribeObj", () => {
+	it("works", () => {
+		const db = new Database()
+
+		resetGame(db)
+
+		let game: Game
+		const [initialGame, unsubscribe] = subscribeObj(
+			db,
+			gameId,
+			GameObj,
+			(newGame) => {
+				game = newGame
+			}
+		)
+		game = initialGame
+
+		const player1Id = game.players[0]
+		const player2Id = addPlayer(db)
+
+		let player1: Player
+		const [initialPlayer1, unsubscribe1] = subscribeObj(
+			db,
+			player1Id,
+			PlayerObj,
+			(newPlayer1) => {
+				player1 = newPlayer1
+			}
+		)
+		player1 = initialPlayer1
+
+		let player2: Player
+		const [initialPlayer2, unsubscribe2] = subscribeObj(
+			db,
+			player2Id,
+			PlayerObj,
+			(newPlayer2) => {
+				player2 = newPlayer2
+			}
+		)
+		player2 = initialPlayer2
+
+		setPlayerName(db, player1Id, "Chet")
+		incrementScore(db, player1Id, 6)
+
+		setPlayerName(db, player2Id, "Meghan")
+		incrementScore(db, player2Id, 9)
+
+		assert.deepEqual(game, {
+			id: game.id,
+			players: [player1Id, player2Id],
+		})
+
+		assert.deepEqual(player1, {
+			id: player1Id,
+			name: "Chet",
+			score: 6,
+		})
+
+		assert.deepEqual(player2, {
+			id: player2Id,
+			name: "Meghan",
+			score: 9,
+		})
+	})
+})
