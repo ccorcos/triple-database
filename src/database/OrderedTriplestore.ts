@@ -50,6 +50,34 @@ type Obj = {
 	[key: string]: Prop | Prop[] // NOTE: no nested arrays.
 }
 
+const isProxyObjSymbol = Symbol("isProxyObjSymbol")
+const isProxyListSymbol = Symbol("isProxyListSymbol")
+const toJsonSymbol = Symbol("toJsonSymbol")
+
+type ProxyProp<T extends Prop> = T extends Obj ? ProxyObj<T> : T
+
+type ProxyObjProp<T extends Prop | Prop[]> = T extends Prop[]
+	? ProxyList<ProxyProp<T[number]>>
+	: T extends Obj
+	? ProxyObj<T>
+	: T
+
+type ProxyObj<T extends Obj> = {
+	[isProxyObjSymbol]: true
+	[toJsonSymbol](): T
+} & {
+	[K in keyof T]: ProxyObjProp<T[K]>
+}
+
+type ProxyList<T extends Prop> = {
+	[isProxyListSymbol]: true
+	// [proxyCursorSymbol]: [string, string] // [id, prop]
+	[toJsonSymbol](): T[]
+	[index: number]: ProxyProp<T>
+	length: number
+	push(value: T): void
+}
+
 // Example of how objects serialize.
 // {
 // 	id: 1,
@@ -261,31 +289,18 @@ export function setProp<O extends Obj, T extends keyof O>(
 	})
 }
 
-const cursorObjSymbol = Symbol("CursorObj")
-const cursorListSymbol = Symbol("CursorList")
-
-type CursorObj<T extends Obj> = T & { [key in typeof cursorObjSymbol]: true }
-type CursorList<T extends Prop> = {
-	[key in typeof cursorListSymbol]: true
-} & { [key in number]: T } & { length: number } & { push(value: T): void }
-
-// interface CursorList2<T extends Prop> {
-// 	[typeof cursorListSymbol]: true
-// 	[key in number]: T
-// 	length: number
-// 	push(value: T): void
-// }
-
-export function proxyObj<T extends { id: string }>(
+export function proxyObj<T extends Obj>(
 	db: TupleStorage | Transaction,
 	id: string,
 	schema: t.RuntimeDataType<T> | t.DataType
-): T {
+): ProxyObj<T> {
 	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Must be object schema.")
 
 	// TODO: refactor this out? Its different from readProp because this returns proxies.
-	const getProp = (prop: string | symbol) => {
+	const getProxyObjProp = (prop: string | symbol) => {
+		if (prop === isProxyObjSymbol) return true
+		if (prop === toJsonSymbol) throw new Error("Not implemented yet.")
 		if (typeof prop === "symbol") return undefined
 		if (!(prop in dataType.required)) return undefined
 		const propType = dataType.required[prop]
@@ -303,20 +318,20 @@ export function proxyObj<T extends { id: string }>(
 		return readProp(db, id, prop, propType)
 	}
 
-	return new Proxy<T>({} as any, {
+	return new Proxy<ProxyObj<T>>({} as any, {
 		// This allows deepEqual to work.
 		ownKeys: function () {
 			return Object.keys(dataType.required)
 		},
 		getOwnPropertyDescriptor: (target, key) => {
 			return {
-				value: getProp(key),
+				value: getProxyObjProp(key),
 				enumerable: true,
 				configurable: true,
 			}
 		},
 		get(target, prop) {
-			return getProp(prop)
+			return getProxyObjProp(prop)
 		},
 		set(target, prop, value) {
 			if (typeof prop === "symbol") throw new Error("No symbols.")
@@ -359,39 +374,33 @@ export function appendProp<T extends Prop>(
 	})
 }
 
-export function proxyList<T>(
+export function proxyList<T extends Prop>(
 	db: TupleStorage | Transaction,
 	id: string,
 	listProp: string,
 	schema: t.RuntimeDataType<T> | t.DataType
-): T[] {
+): ProxyList<T> {
 	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type === "object") throw new Error("No nested objects, yet.")
 	if (dataType.type === "array") throw new Error("No nested array.")
 
 	const getProp = (prop: string | symbol) => {
-		if (typeof prop === "symbol") {
-			// if (prop === Symbol.toStringTag) {
-			// 	const values = db
-			// 		.scan({ prefix: ["eaov", id, listProp] })
-			// 		.map(first)
-			// 		.map(last)
-			// 	return values[Symbol.toStringTag]
-			// }
-			if (prop === Symbol.iterator) {
-				return function* () {
-					// TODO: validate the schema here.
-					const values = db
-						.scan({ prefix: ["eaov", id, listProp] })
-						.map(first)
-						.map(last)
-					for (const value of values) {
-						yield value
-					}
+		if (prop === isProxyListSymbol) return true
+		if (prop === toJsonSymbol) throw new Error("Not implemented yet.")
+		if (prop === Symbol.iterator) {
+			return function* () {
+				// TODO: validate the schema here.
+				const values = db
+					.scan({ prefix: ["eaov", id, listProp] })
+					.map(first)
+					.map(last)
+				for (const value of values) {
+					yield value
 				}
 			}
-			return undefined
 		}
+
+		if (typeof prop === "symbol") return undefined
 
 		if (prop === "length") {
 			const results = db.scan({ prefix: ["eaov", id, listProp] }).map(first)
@@ -399,7 +408,7 @@ export function proxyList<T>(
 		}
 
 		if (prop === "push")
-			return (value: Prop) => appendProp(db, id, listProp, value, dataType)
+			return (value: T) => appendProp(db, id, listProp, value, dataType)
 
 		// if (prop === "map") {
 		// 	const values = db
@@ -422,11 +431,17 @@ export function proxyList<T>(
 			const value = values[n]
 			const error = t.validateDataType(dataType, value)
 			if (error) throw new Error(t.formatError(error))
+
+			// TODO: for nested objects, need to construct them here.
+
 			return value
 		}
 	}
 
-	return new Proxy(["proxied list"] as any, {
+	// Putting this string in there means that it will print out when inspecting
+	// from the console which is less confusing than an empty list.
+	const obj = ["ProxyList<T>"] as any
+	return new Proxy(obj as ProxyList<T>, {
 		// This allows deepEqual to work.
 		ownKeys: function () {
 			return ["length"]
