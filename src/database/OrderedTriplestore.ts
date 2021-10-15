@@ -330,6 +330,35 @@ export function proxyObj<T extends { id: string }>(
 	})
 }
 
+export function appendProp<T extends Prop>(
+	dbOrTx: TupleStorage | Transaction,
+	id: string,
+	listProp: string,
+	value: T,
+	schema: t.RuntimeDataType<T> | t.DataType
+) {
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	const error = t.validateDataType(dataType, value)
+	if (error) throw new Error(t.formatError(error))
+
+	const results = dbOrTx
+		.scan({ prefix: ["eaov", id, listProp], reverse: true, limit: 1 })
+		.map(first)
+
+	let index: number = 0
+	if (results.length !== 0) {
+		const order = single(results)[3]
+		const error = t.number.validate(order)
+		if (error) throw new Error(t.formatError(error))
+		index = order as any
+		index += 1
+	}
+
+	composeTx(dbOrTx, (tx) => {
+		tx.set(["eaov", id, listProp, index, value], null)
+	})
+}
+
 export function proxyList<T>(
 	db: TupleStorage | Transaction,
 	id: string,
@@ -341,9 +370,7 @@ export function proxyList<T>(
 	if (dataType.type === "array") throw new Error("No nested array.")
 
 	const getProp = (prop: string | symbol) => {
-		console.log("PROP", prop)
 		if (typeof prop === "symbol") {
-			console.log("SYMBOL", prop)
 			// if (prop === Symbol.toStringTag) {
 			// 	const values = db
 			// 		.scan({ prefix: ["eaov", id, listProp] })
@@ -372,27 +399,7 @@ export function proxyList<T>(
 		}
 
 		if (prop === "push")
-			return (value: any) => {
-				const error = t.validateDataType(dataType, value)
-				if (error) throw new Error(t.formatError(error))
-
-				const results = db
-					.scan({ prefix: ["eaov", id, listProp], reverse: true, limit: 1 })
-					.map(first)
-
-				let index: number = 0
-				if (results.length !== 0) {
-					const order = single(results)[3]
-					const error = t.number.validate(order)
-					if (error) throw new Error(t.formatError(error))
-					index = order as any
-					index += 1
-				}
-
-				composeTx(db, (tx) => {
-					tx.set(["eaov", id, listProp, index, value], null)
-				})
-			}
+			return (value: Prop) => appendProp(db, id, listProp, value, dataType)
 
 		// if (prop === "map") {
 		// 	const values = db

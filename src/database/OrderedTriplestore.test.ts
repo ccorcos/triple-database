@@ -3,6 +3,7 @@ import * as t from "data-type-ts"
 import { describe, it } from "mocha"
 import { Assert } from "../helpers/typeHelpers"
 import {
+	appendProp,
 	deleteObj,
 	hardDeleteObj,
 	objToTuples,
@@ -289,6 +290,17 @@ describe("OrderedTriplestore", () => {
 			const players = proxyList(db, game.id, "players", t.string)
 			assert.equal(players.length, 2)
 			assert.deepEqual(players, [player1.id, player2.id])
+		})
+
+		it("appendProp", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
+
+			appendProp(db, game.id, "players", "player3", t.string)
+			const players = proxyList(db, game.id, "players", t.string)
+			assert.deepEqual(players, [player1.id, player2.id, "player3"])
 		})
 
 		it("proxyList push()", () => {
