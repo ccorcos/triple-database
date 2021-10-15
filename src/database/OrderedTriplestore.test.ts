@@ -12,6 +12,7 @@ import {
 	proxyObj,
 	readObj,
 	setProp,
+	subscribeObj,
 	writeObj,
 } from "./OrderedTriplestore"
 
@@ -313,10 +314,74 @@ describe("OrderedTriplestore", () => {
 			players.push("player3")
 			assert.deepEqual(players, [player1.id, player2.id, "player3"])
 		})
-	})
 
-	// appendProp
-	// proxyObj
-	// proxyLost
-	// subscribeObj
+		it("subscribeObj", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
+
+			let g: Game
+			const [initialGame, unsubscribe] = subscribeObj(
+				db,
+				game.id,
+				GameObj,
+				(newGame) => {
+					g = newGame
+				}
+			)
+			g = initialGame
+
+			const player1Id = g.players[0]
+			const player2Id = g.players[1]
+
+			let p1: Player
+			const [initialPlayer1, unsubscribe1] = subscribeObj(
+				db,
+				player1Id,
+				PlayerObj,
+				(newPlayer1) => {
+					p1 = newPlayer1
+				}
+			)
+			p1 = initialPlayer1
+
+			let p2: Player
+			const [initialPlayer2, unsubscribe2] = subscribeObj(
+				db,
+				player2Id,
+				PlayerObj,
+				(newPlayer2) => {
+					p2 = newPlayer2
+				}
+			)
+			p2 = initialPlayer2
+
+			const pp1 = proxyObj(db, p1.id, PlayerObj)
+			const pp2 = proxyObj(db, p2.id, PlayerObj)
+
+			pp1.name = "Chet"
+			pp1.score = 6
+
+			assert.deepEqual(p1, {
+				id: player1.id,
+				name: "Chet",
+				score: 6,
+			})
+
+			pp2.name = "Meghan"
+			pp2.score = 9
+
+			assert.deepEqual(p2, {
+				id: player2.id,
+				name: "Meghan",
+				score: 9,
+			})
+
+			assert.deepEqual(g, {
+				id: game.id,
+				players: [p1.id, p2.id],
+			})
+		})
+	})
 })
