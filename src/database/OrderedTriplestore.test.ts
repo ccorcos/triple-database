@@ -1,7 +1,7 @@
 import { strict as assert } from "assert"
 import * as t from "data-type-ts"
 import { describe, it } from "mocha"
-import { Assert } from "../helpers/typeHelpers"
+import { AssertTrue, Equals } from "../helpers/typeHelpers"
 import {
 	appendProp,
 	deleteObj,
@@ -16,177 +16,174 @@ import {
 	writeObj,
 } from "./OrderedTriplestore"
 
-// Later:
-// - test with a nested object
-// - test with duck-typed values such as { date: string }
-
-const PlayerObj = t.object({
-	required: {
-		id: t.string,
-		name: t.string,
-		score: t.number,
-	},
-	optional: {},
-})
-const GameObj = t.object({
-	required: { id: t.string, players: t.array(PlayerObj) },
-	optional: {},
-})
-
-type Game = typeof GameObj.value
-
-type Player = typeof PlayerObj.value
-
 describe("OrderedTriplestore", () => {
-	it("works", () => {
-		assert.ok(true)
-	})
+	describe("Nested Objects", () => {
+		const PlayerObj = t.object({
+			required: {
+				id: t.string,
+				name: t.string,
+				score: t.number,
+			},
+			optional: {},
+		})
+		const GameObj = t.object({
+			required: { id: t.string, players: t.array(PlayerObj) },
+			optional: {},
+		})
 
-	it("objToTuples", () => {
-		const game: Game = {
-			id: "game1",
-			players: [
-				{ id: "player1", name: "Chet", score: 2 },
-				{ id: "player2", name: "Meghan", score: 3 },
-			],
-		}
+		type Game = typeof GameObj.value
 
-		const tuples = objToTuples(game, GameObj)
-		assert.deepEqual(tuples, [
-			["eaov", "game1", "players", 0, "player1"],
-			["eaov", "player1", "name", null, "Chet"],
-			["eaov", "player1", "score", null, 2],
-			["eaov", "game1", "players", 1, "player2"],
-			["eaov", "player2", "name", null, "Meghan"],
-			["eaov", "player2", "score", null, 3],
-		])
-	})
+		type Player = typeof PlayerObj.value
 
-	it("writeObj + readObj", () => {
-		const game: Game = {
-			id: "game1",
-			players: [
-				{ id: "player1", name: "Chet", score: 2 },
-				{ id: "player2", name: "Meghan", score: 3 },
-			],
-		}
+		it("objToTuples", () => {
+			const game: Game = {
+				id: "game1",
+				players: [
+					{ id: "player1", name: "Chet", score: 2 },
+					{ id: "player2", name: "Meghan", score: 3 },
+				],
+			}
 
-		const db = new OrderedTriplestore()
-		writeObj(db, game, GameObj)
-		const game2 = readObj(db, game.id, GameObj)
+			const tuples = objToTuples(game, GameObj)
+			assert.deepEqual(tuples, [
+				["eaov", "game1", "players", 0, "player1"],
+				["eaov", "player1", "name", null, "Chet"],
+				["eaov", "player1", "score", null, 2],
+				["eaov", "game1", "players", 1, "player2"],
+				["eaov", "player2", "name", null, "Meghan"],
+				["eaov", "player2", "score", null, 3],
+			])
+		})
 
-		// TODO: assert typeof game2 is not any!
-		type SameType = Assert<typeof game2, Game>
+		it("writeObj + readObj", () => {
+			const game: Game = {
+				id: "game1",
+				players: [
+					{ id: "player1", name: "Chet", score: 2 },
+					{ id: "player2", name: "Meghan", score: 3 },
+				],
+			}
 
-		assert.ok(game !== game2)
-		assert.deepEqual(game, game2)
-	})
-	it.skip("writeObj + readObj with optional properties", () => {})
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			const game2 = readObj(db, game.id, GameObj)
 
-	it("deleteObj", () => {
-		const game: Game = {
-			id: "game1",
-			players: [
-				{ id: "player1", name: "Chet", score: 2 },
-				{ id: "player2", name: "Meghan", score: 3 },
-			],
-		}
+			type SameType = AssertTrue<Equals<typeof game2, Game>>
 
-		const db = new OrderedTriplestore()
-		writeObj(db, game, GameObj)
-		const game2 = readObj(db, game.id, GameObj)
+			assert.ok(game !== game2)
+			assert.deepEqual(game, game2)
+		})
+		it.skip("writeObj + readObj with optional properties", () => {})
 
-		assert.ok(game !== game2)
-		assert.deepEqual(game, game2)
+		it("deleteObj", () => {
+			const game: Game = {
+				id: "game1",
+				players: [
+					{ id: "player1", name: "Chet", score: 2 },
+					{ id: "player2", name: "Meghan", score: 3 },
+				],
+			}
 
-		// NOTE: this also deletes the players too!
-		deleteObj(db, game.id, GameObj)
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			const game2 = readObj(db, game.id, GameObj)
 
-		assert.deepEqual(db.scan(), [])
+			assert.ok(game !== game2)
+			assert.deepEqual(game, game2)
 
-		// This is an interesting special-case:
-		// An object with a single array property and the array is empty...
-		// So it doesnt throw!
-		// assert.throws(() => {
-		const game3 = readObj(db, game.id, GameObj)
-		assert.deepEqual(game3, { id: "game1", players: [] })
-		// })
-	})
+			// NOTE: this also deletes the players too!
+			deleteObj(db, game.id, GameObj)
 
-	it("deleteObj with optional properties", () => {})
+			assert.deepEqual(db.scan(), [])
 
-	it("hardDeleteObj", () => {
-		const player1: Player = { id: "player1", name: "Chet", score: 2 }
-		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+			// This is an interesting special-case:
+			// An object with a single array property and the array is empty...
+			// So it doesnt throw!
+			// assert.throws(() => {
+			const game3 = readObj(db, game.id, GameObj)
+			assert.deepEqual(game3, { id: "game1", players: [] })
+			// })
+		})
 
-		const game: Game = {
-			id: "game1",
-			players: [player1, player2],
-		}
+		it("deleteObj with optional properties", () => {})
 
-		const db = new OrderedTriplestore()
-		writeObj(db, game, GameObj)
-		const game2 = readObj(db, game.id, GameObj)
+		it("hardDeleteObj", () => {
+			const player1: Player = { id: "player1", name: "Chet", score: 2 }
+			const player2: Player = { id: "player2", name: "Meghan", score: 3 }
 
-		assert.ok(game !== game2)
-		assert.deepEqual(game, game2)
+			const game: Game = {
+				id: "game1",
+				players: [player1, player2],
+			}
 
-		// NOTE: this does not delete the players!
-		hardDeleteObj(db, game.id)
-		assert.ok(db.scan().length > 0)
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			const game2 = readObj(db, game.id, GameObj)
 
-		hardDeleteObj(db, player1.id)
-		assert.ok(db.scan().length > 0)
+			assert.ok(game !== game2)
+			assert.deepEqual(game, game2)
 
-		hardDeleteObj(db, player2.id)
-		assert.deepEqual(db.scan(), [])
-	})
+			// NOTE: this does not delete the players!
+			hardDeleteObj(db, game.id)
+			assert.ok(db.scan().length > 0)
 
-	describe("setProp", () => {
-		it("string", () => {
+			hardDeleteObj(db, player1.id)
+			assert.ok(db.scan().length > 0)
+
+			hardDeleteObj(db, player2.id)
+			assert.deepEqual(db.scan(), [])
+		})
+
+		describe("setProp", () => {
+			it("string", () => {
+				const player1: Player = { id: "player1", name: "Chet", score: 2 }
+				const player2: Player = { id: "player2", name: "Meghan", score: 3 }
+				const game: Game = { id: "game1", players: [player1, player2] }
+				const db = new OrderedTriplestore()
+				writeObj(db, game, GameObj)
+
+				setProp(db, player1.id, "name", "Chester", PlayerObj)
+				assert.throws(() => {
+					// @ts-expect-error
+					setProp(db, player1.id, "name2", "Chester", PlayerObj)
+				})
+
+				const newPlayer1 = readObj(db, player1.id, PlayerObj)
+				assert.deepEqual(newPlayer1, {
+					id: "player1",
+					name: "Chester",
+					score: 2,
+				})
+			})
+
+			it.skip("object", () => {})
+			it.skip("array", () => {})
+			it.skip("optional properties", () => {})
+		})
+
+		it.skip("appendProp", () => {})
+
+		it.skip("proxyObj nested objects", () => {
 			const player1: Player = { id: "player1", name: "Chet", score: 2 }
 			const player2: Player = { id: "player2", name: "Meghan", score: 3 }
 			const game: Game = { id: "game1", players: [player1, player2] }
 			const db = new OrderedTriplestore()
 			writeObj(db, game, GameObj)
 
-			setProp(db, player1.id, "name", "Chester", PlayerObj)
-			assert.throws(() => {
-				// @ts-expect-error
-				setProp(db, player1.id, "name2", "Chester", PlayerObj)
-			})
+			const g = proxyObj(db, game.id, GameObj)
 
-			const newPlayer1 = readObj(db, player1.id, PlayerObj)
-			assert.deepEqual(newPlayer1, { id: "player1", name: "Chester", score: 2 })
+			assert.equal(g.id, game.id)
+			assert.equal(g.players.length, 2)
+			assert.equal(g.players[0].id, "player1")
+			assert.equal(g.players[0].name, "Chet")
+			assert.equal(g.players[0].score, 2)
+			assert.equal(g.players[1].id, "player2")
+			assert.equal(g.players[1].name, "Meghan")
+			assert.equal(g.players[1].score, 3)
 		})
-
-		it.skip("object", () => {})
-		it.skip("array", () => {})
-		it.skip("optional properties", () => {})
 	})
 
-	it.skip("appendProp", () => {})
-
-	it.skip("proxyObj nested objects", () => {
-		const player1: Player = { id: "player1", name: "Chet", score: 2 }
-		const player2: Player = { id: "player2", name: "Meghan", score: 3 }
-		const game: Game = { id: "game1", players: [player1, player2] }
-		const db = new OrderedTriplestore()
-		writeObj(db, game, GameObj)
-
-		const g = proxyObj(db, game.id, GameObj)
-
-		assert.equal(g.id, game.id)
-		assert.equal(g.players.length, 2)
-		assert.equal(g.players[0].id, "player1")
-		assert.equal(g.players[0].name, "Chet")
-		assert.equal(g.players[0].score, 2)
-		assert.equal(g.players[1].id, "player2")
-		assert.equal(g.players[1].name, "Meghan")
-		assert.equal(g.players[1].score, 3)
-	})
-
-	describe("flattened schema", () => {
+	describe("Flat Objects", () => {
 		// Flattened out schema.
 		const PlayerObj = t.object({
 			required: {
@@ -234,8 +231,6 @@ describe("OrderedTriplestore", () => {
 			assert.equal(p2.score, 3)
 		})
 
-		// TODO: this is failing, I think, because we need to be able to iterate properties
-		// on the proxied object.
 		it("proxyObj read and write", () => {
 			const db = new OrderedTriplestore()
 			writeObj(db, player1, PlayerObj)
@@ -249,27 +244,6 @@ describe("OrderedTriplestore", () => {
 			p.score += 5
 			assert.deepEqual(p, { id: "player1", name: "Chester", score: 7 })
 		})
-
-		// it("proxy an array and enumerate it", () => {
-		// 	const numbers = [1, 2, 3]
-		// 	const list = new Proxy<number[]>([], {
-		// 		// This allows deepEqual to work.
-		// 		ownKeys: function () {
-		// 			return Object.getOwnPropertyNames(numbers)
-		// 		},
-		// 		getOwnPropertyDescriptor: (target, key) => {
-		// 			return {
-		// 				writable: key === "length",
-		// 				value: getProp(key),
-		// 				enumerable: key !== "length",
-		// 				configurable: key !== "length",
-		// 			}
-		// 		},
-		// 		get(target, prop) {
-		// 			return getProp(prop)
-		// 		},
-		// 	})
-		// })
 
 		it("proxyList", () => {
 			const db = new OrderedTriplestore()

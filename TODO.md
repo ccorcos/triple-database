@@ -1,8 +1,9 @@
 ## TODO
 
 
-HERE
-- see if we can add nested objects?
+- test with a nested object
+- test with duck-typed values such as { date: string }
+- actually implement in the GameCounter app.
 
 ---
 

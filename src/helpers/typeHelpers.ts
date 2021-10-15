@@ -17,3 +17,13 @@ type SameUnion = Assert<number | string, number | string>
 
 // @ts-expect-error
 type ExceedUnion = Assert<number | string, number>
+
+// https://github.com/microsoft/TypeScript/issues/27024#issuecomment-421529650
+export type Equals<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
+	T
+>() => T extends Y ? 1 : 2
+	? true
+	: false
+
+// https://stackoverflow.com/questions/69565822/how-to-type-level-assert-a-type-is-not-any/69567373#69567373
+export type AssertTrue<A extends true> = A
