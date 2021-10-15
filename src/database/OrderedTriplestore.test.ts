@@ -11,7 +11,7 @@ import {
 	proxyList,
 	proxyObj,
 	readObj,
-	setProp,
+	setObjProp,
 	subscribeObj,
 	writeObj,
 } from "./OrderedTriplestore"
@@ -142,10 +142,10 @@ describe("OrderedTriplestore", () => {
 				const db = new OrderedTriplestore()
 				writeObj(db, game, GameObj)
 
-				setProp(db, player1.id, "name", "Chester", PlayerObj)
+				setObjProp(db, player1.id, "name", "Chester", PlayerObj)
 				assert.throws(() => {
 					// @ts-expect-error
-					setProp(db, player1.id, "name2", "Chester", PlayerObj)
+					setObjProp(db, player1.id, "name2", "Chester", PlayerObj)
 				})
 
 				const newPlayer1 = readObj(db, player1.id, PlayerObj)
@@ -359,3 +359,6 @@ describe("OrderedTriplestore", () => {
 		})
 	})
 })
+
+// TODO:
+// deleteBacklinks

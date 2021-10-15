@@ -42,6 +42,10 @@ export class OrderedTriplestore extends ReactiveStorage {
 	}
 }
 
+// ============================================================================
+// Types
+// ============================================================================
+
 // This is the subset of JSON that we can represent.
 type Prop = string | number | boolean | Obj
 
@@ -54,9 +58,9 @@ const isProxyObjSymbol = Symbol("isProxyObjSymbol")
 const isProxyListSymbol = Symbol("isProxyListSymbol")
 const toJsonSymbol = Symbol("toJsonSymbol")
 
-type ProxyProp<T extends Prop> = T extends Obj ? ProxyObj<T> : T
+type ProxyProp<T extends Prop = Prop> = T extends Obj ? ProxyObj<T> : T
 
-type ProxyObjProp<T extends Prop | Prop[]> = T extends Prop[]
+type ProxyObjProp<T extends Prop | Prop[] = Prop | Prop[]> = T extends Prop[]
 	? ProxyList<ProxyProp<T[number]>>
 	: T extends Obj
 	? ProxyObj<T>
@@ -77,6 +81,10 @@ type ProxyList<T extends Prop> = {
 	length: number
 	push(value: T): void
 }
+
+// ============================================================================
+// Basic Read/Write Helpers
+// ============================================================================
 
 // Example of how objects serialize.
 // {
@@ -229,8 +237,8 @@ export function writeObj<T extends { id: string }>(
 	})
 }
 
-// // Delete obj doesn't require a schema because we also handle inverse relationships
-// // and it just extra save to get all of the id references cleaned up.
+// Delete obj doesn't require a schema because we also handle inverse relationships
+// and its just extra safe to get all of the id references cleaned up.
 export function hardDeleteObj(
 	dbOrTx: TupleStorage | Transaction,
 	id: string,
@@ -239,14 +247,20 @@ export function hardDeleteObj(
 	return composeTx(dbOrTx, (tx) => {
 		const objectProperties = tx.scan({ prefix: ["eaov", id] }).map(first)
 		tx.write({ remove: objectProperties })
+		if (backlinks) deleteBacklinks(dbOrTx, id)
+	})
+}
 
-		if (backlinks) {
-			const inverseRelationships = tx
-				.scan({ prefix: ["vaeo", id] })
-				.map(first)
-				.map(([vaeo, v, a, e, o]) => ["eaov", e, a, o, v] as Tuple)
-			tx.write({ remove: inverseRelationships })
-		}
+export function deleteBacklinks(
+	dbOrTx: TupleStorage | Transaction,
+	id: string
+) {
+	return composeTx(dbOrTx, (tx) => {
+		const backlinks = tx
+			.scan({ prefix: ["vaeo", id] })
+			.map(first)
+			.map(([vaeo, v, a, e, o]) => ["eaov", e, a, o, v] as Tuple)
+		tx.write({ remove: backlinks })
 	})
 }
 
@@ -262,7 +276,11 @@ export function deleteObj<T extends Obj>(
 	})
 }
 
-export function setProp<O extends Obj, T extends keyof O>(
+// ============================================================================
+// Proxy Helpers
+// ============================================================================
+
+export function setObjProp<O extends Obj, T extends keyof O>(
 	dbOrTx: TupleStorage | Transaction,
 	id: string,
 	property: T,
@@ -276,17 +294,49 @@ export function setProp<O extends Obj, T extends keyof O>(
 	const prop = property as number | string // just not symbol
 	const propType = dataType.required[prop]
 
-	if (propType.type === "object") throw new Error("No nested objects, yet.")
 	if (propType.type === "array")
 		throw new Error("Call the array mutation methods instead.")
 
+	if (propType.type === "object")
+		// If we overwrite an object, do we delete the old one? It's better to make
+		// developers be explicit.
+		throw new Error("Flatten your schema so there are no nested objects.")
+
 	const error = t.validateDataType(propType, value)
 	if (error) throw new Error(t.formatError(error))
+
 	return composeTx(dbOrTx, (tx) => {
 		const existing = tx.scan({ prefix: ["eaov", id, prop] }).map(first)
 		tx.write({ remove: existing })
 		tx.set(["eaov", id, prop, null, value], null)
 	})
+}
+
+export function getProxyObjProp<O extends Obj, T extends keyof O>(
+	db: TupleStorage | Transaction,
+	id: string,
+	property: T,
+	schema: t.RuntimeDataType<T> | t.DataType
+): ProxyObjProp<O[T]> {
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	if (dataType.type !== "object") throw new Error("Must be object schema.")
+
+	if (property === isProxyObjSymbol) return true as any
+	if (property === toJsonSymbol) throw new Error("Not implemented yet.")
+	if (typeof property === "symbol") return undefined as any
+
+	if (!(property in dataType.required)) return undefined as any
+
+	const prop = property as string
+	const propType = dataType.required[prop]
+
+	if (propType.type === "object")
+		throw new Error("Flatten your schema so there are no nested objects.")
+
+	if (propType.type === "array")
+		return proxyList(db, id, prop, propType.inner) as any
+
+	return readProp(db, id, prop, propType) as any
 }
 
 export function proxyObj<T extends Obj>(
@@ -297,41 +347,20 @@ export function proxyObj<T extends Obj>(
 	const dataType = "dataType" in schema ? schema.dataType : schema
 	if (dataType.type !== "object") throw new Error("Must be object schema.")
 
-	// TODO: refactor this out? Its different from readProp because this returns proxies.
-	const getProxyObjProp = (prop: string | symbol) => {
-		if (prop === isProxyObjSymbol) return true
-		if (prop === toJsonSymbol) throw new Error("Not implemented yet.")
-		if (typeof prop === "symbol") return undefined
-		if (!(prop in dataType.required)) return undefined
-		const propType = dataType.required[prop]
-
-		if (propType.type === "object") {
-			throw new Error("No nested objects, yet.")
-			// const otherId = readProp(db, id, prop, t.string)
-			// return proxyObj(db, otherId, propType)
-		}
-
-		if (propType.type === "array") {
-			return proxyList(db, id, prop, propType.inner)
-		}
-
-		return readProp(db, id, prop, propType)
-	}
-
 	return new Proxy<ProxyObj<T>>({} as any, {
 		// This allows deepEqual to work.
 		ownKeys: function () {
 			return Object.keys(dataType.required)
 		},
-		getOwnPropertyDescriptor: (target, key) => {
+		getOwnPropertyDescriptor: (target, prop) => {
 			return {
-				value: getProxyObjProp(key),
+				value: getProxyObjProp(db, id, prop as any, dataType),
 				enumerable: true,
 				configurable: true,
 			}
 		},
 		get(target, prop) {
-			return getProxyObjProp(prop)
+			return getProxyObjProp(db, id, prop as any, dataType)
 		},
 		set(target, prop, value) {
 			if (typeof prop === "symbol") throw new Error("No symbols.")
@@ -339,7 +368,7 @@ export function proxyObj<T extends Obj>(
 			if (!(prop in dataType.required))
 				throw new Error("Invalid property for schema.")
 
-			setProp(db, id, prop, value, dataType)
+			setObjProp(db, id, prop, value, dataType)
 			return true
 		},
 	})
@@ -374,6 +403,29 @@ export function appendProp<T extends Prop>(
 	})
 }
 
+export function getProxyListItem<T extends Prop>(
+	dbOrTx: ReadOnlyTupleStorage,
+	id: string,
+	prop: string,
+	index: number,
+	schema: t.RuntimeDataType<T> | t.DataType
+): T {
+	const dataType = "dataType" in schema ? schema.dataType : schema
+	if (dataType.type === "array") throw new Error("No arrays inside array.")
+	if (dataType.type === "object")
+		throw new Error("Flatten your schema. No nested objects inside lists.")
+
+	const values = dbOrTx
+		.scan({ prefix: ["eaov", id, prop] })
+		.map(first)
+		.map(last)
+	const value = values[index]
+
+	const error = t.validateDataType(dataType, value)
+	if (error) throw new Error(t.formatError(error))
+	return value as any
+}
+
 export function proxyList<T extends Prop>(
 	db: TupleStorage | Transaction,
 	id: string,
@@ -384,7 +436,7 @@ export function proxyList<T extends Prop>(
 	if (dataType.type === "object") throw new Error("No nested objects, yet.")
 	if (dataType.type === "array") throw new Error("No nested array.")
 
-	const getProp = (prop: string | symbol) => {
+	const getListProxyProp = (prop: string | symbol) => {
 		if (prop === isProxyListSymbol) return true
 		if (prop === toJsonSymbol) throw new Error("Not implemented yet.")
 		if (prop === Symbol.iterator) {
@@ -395,6 +447,9 @@ export function proxyList<T extends Prop>(
 					.map(first)
 					.map(last)
 				for (const value of values) {
+					const error = t.validateDataType(dataType, value)
+					if (error)
+						throw new Error("Item does not match schema: " + dataType.type)
 					yield value
 				}
 			}
@@ -403,39 +458,19 @@ export function proxyList<T extends Prop>(
 		if (typeof prop === "symbol") return undefined
 
 		if (prop === "length") {
-			const results = db.scan({ prefix: ["eaov", id, listProp] }).map(first)
-			return results.length
+			return db.scan({ prefix: ["eaov", id, listProp] }).length
 		}
 
 		if (prop === "push")
 			return (value: T) => appendProp(db, id, listProp, value, dataType)
 
-		// if (prop === "map") {
-		// 	const values = db
-		// 		.scan({ prefix: ["eaov", id, listProp] })
-		// 		.map(first)
-		// 		.map(last)
-		// 	return values.map.bind(values)
-		// }
 		// if (property === "splice")
 		// if (property === "insertAfter")
 		// if (property === "insertBelow")
 		// if (property === "remove...?")
 
 		const n = parseInt(prop)
-		if (!isNaN(n)) {
-			const values = db
-				.scan({ prefix: ["eaov", id, listProp] })
-				.map(first)
-				.map(last)
-			const value = values[n]
-			const error = t.validateDataType(dataType, value)
-			if (error) throw new Error(t.formatError(error))
-
-			// TODO: for nested objects, need to construct them here.
-
-			return value
-		}
+		if (!isNaN(n)) return getProxyListItem(db, id, listProp, n, dataType)
 	}
 
 	// Putting this string in there means that it will print out when inspecting
@@ -449,13 +484,13 @@ export function proxyList<T extends Prop>(
 		getOwnPropertyDescriptor: (target, key) => {
 			return {
 				writable: key === "length",
-				value: getProp(key),
+				value: getListProxyProp(key),
 				enumerable: key !== "length",
 				configurable: key !== "length",
 			}
 		},
 		get(target, prop) {
-			return getProp(prop)
+			return getListProxyProp(prop)
 		},
 	})
 }

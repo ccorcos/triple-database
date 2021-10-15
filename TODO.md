@@ -1,9 +1,15 @@
 ## TODO
 
 
-- test with a nested object
+- test with a nested object -> no nested objects.
+
+- flat obj type.
+- lets do the game counter sooner than later just to see how we're going to use this thing...
+
 - test with duck-typed values such as { date: string }
 - actually implement in the GameCounter app.
+
+- add indexing to the ordered triplestore.
 
 ---
 
