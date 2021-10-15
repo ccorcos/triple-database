@@ -7,6 +7,7 @@ import {
 	hardDeleteObj,
 	objToTuples,
 	OrderedTriplestore,
+	proxyList,
 	proxyObj,
 	readObj,
 	setProp,
@@ -281,23 +282,25 @@ describe("OrderedTriplestore", () => {
 			assert.deepEqual(p.players, [player1.id, player2.id])
 			assert.deepEqual([...p.players], [player1.id, player2.id])
 
-			console.log("HERE", p.players)
+			// This needs to print out correctly!
+			// Seems it might not be possible: https://stackoverflow.com/questions/35929369/mobx-observable-array-does-not-display-correctly
+			// console.log("HERE", p.players, [...p.players])
 
-			// const players = proxyList(db, game.id, "players", t.string)
-			// assert.equal(players.length, 2)
-			// assert.deepEqual(players, [player1.id, player2.id])
+			const players = proxyList(db, game.id, "players", t.string)
+			assert.equal(players.length, 2)
+			assert.deepEqual(players, [player1.id, player2.id])
 		})
 
-		// it("proxyList push()", () => {
-		// 	const db = new OrderedTriplestore()
-		// 	writeObj(db, game, GameObj)
-		// 	writeObj(db, player1, PlayerObj)
-		// 	writeObj(db, player2, PlayerObj)
+		it("proxyList push()", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
 
-		// 	const players = proxyList(db, game.id, "players", t.array(PlayerObj))
-		// 	assert.equal(players.length, 2)
-		// 	assert.deepEqual(players, [player1.id, player2.id])
-		// })
+			const players = proxyList(db, game.id, "players", t.string)
+			players.push("player3")
+			assert.deepEqual(players, [player1.id, player2.id, "player3"])
+		})
 	})
 
 	// appendProp

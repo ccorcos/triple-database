@@ -1,6 +1,13 @@
 ## TODO
 
 
+HERE
+- finish tests for the basic example
+- see if we can add nested objects?
+- see if we can create custom list and object types with symbol toJSON methods and such.
+
+---
+
 Game Plan:
 - don't need to immutably update a deep json object. also don't need to diff necessarily either.
 -

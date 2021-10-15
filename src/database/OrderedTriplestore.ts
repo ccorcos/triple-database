@@ -261,6 +261,21 @@ export function setProp<O extends Obj, T extends keyof O>(
 	})
 }
 
+const cursorObjSymbol = Symbol("CursorObj")
+const cursorListSymbol = Symbol("CursorList")
+
+type CursorObj<T extends Obj> = T & { [key in typeof cursorObjSymbol]: true }
+type CursorList<T extends Prop> = {
+	[key in typeof cursorListSymbol]: true
+} & { [key in number]: T } & { length: number } & { push(value: T): void }
+
+// interface CursorList2<T extends Prop> {
+// 	[typeof cursorListSymbol]: true
+// 	[key in number]: T
+// 	length: number
+// 	push(value: T): void
+// }
+
 export function proxyObj<T extends { id: string }>(
 	db: TupleStorage | Transaction,
 	id: string,
@@ -326,6 +341,7 @@ export function proxyList<T>(
 	if (dataType.type === "array") throw new Error("No nested array.")
 
 	const getProp = (prop: string | symbol) => {
+		console.log("PROP", prop)
 		if (typeof prop === "symbol") {
 			console.log("SYMBOL", prop)
 			// if (prop === Symbol.toStringTag) {
@@ -403,7 +419,7 @@ export function proxyList<T>(
 		}
 	}
 
-	return new Proxy([] as any, {
+	return new Proxy(["proxied list"] as any, {
 		// This allows deepEqual to work.
 		ownKeys: function () {
 			return ["length"]
