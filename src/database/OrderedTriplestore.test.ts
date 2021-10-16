@@ -289,6 +289,20 @@ describe("OrderedTriplestore", () => {
 			assert.deepEqual(players, [player1.id, player2.id, "player3"])
 		})
 
+		it("proxyList for...of loop", () => {
+			const db = new OrderedTriplestore()
+			writeObj(db, game, GameObj)
+			writeObj(db, player1, PlayerObj)
+			writeObj(db, player2, PlayerObj)
+
+			const players = proxyList(db, game.id, "players", t.string)
+			const result: string[] = []
+			for (const playerId of players) {
+				result.push(playerId)
+			}
+			assert.deepEqual(result, [player1.id, player2.id])
+		})
+
 		it("subscribeObj", () => {
 			const db = new OrderedTriplestore()
 			writeObj(db, game, GameObj)

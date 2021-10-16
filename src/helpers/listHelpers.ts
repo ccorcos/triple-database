@@ -1,7 +1,8 @@
 // Enforces that that the array is length 1 and that
 export function single<T>(values: T[]): T {
-	if (values.length !== 1)
+	if (values.length > 1)
 		throw new Error("Too many values: " + JSON.stringify(values))
+	if (values.length === 0) throw new Error("Empty list.")
 	return values[0]
 }
 

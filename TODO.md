@@ -1,5 +1,24 @@
 ## TODO
 
+- what to do about reactivity causing invalid schema? when deleting an object...
+
+- we need to rebuild the game counter. let real development drive what I build next.
+	- re-order players
+	- muliple games?
+	- contrived counters?
+		- one player plays two games?
+	-
+
+test list.delete
+better subspace types for vaeo
+
+- what if indexes were strings, factionally indexes.
+	- we could abstract away the proxy thing entirely.
+
+- proxyObj and proxyList only accept flat objects.
+- type helper and schema helper for flattening object schemas.
+- It's still helpful for read and write to
+
 
 - test with a nested object -> no nested objects.
 

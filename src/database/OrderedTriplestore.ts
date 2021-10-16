@@ -49,7 +49,7 @@ export class OrderedTriplestore extends ReactiveStorage {
 // This is the subset of JSON that we can represent.
 type Prop = string | number | boolean | Obj
 
-type Obj = {
+export type Obj = {
 	id: string
 	[key: string]: Prop | Prop[] // NOTE: no nested arrays.
 }
@@ -79,7 +79,16 @@ type ProxyList<T extends Prop> = {
 	[toJsonSymbol](): T[]
 	[index: number]: ProxyProp<T>
 	length: number
+} & ProxyListFns<T>
+
+type ProxyListFns<T> = {
+	[Symbol.iterator]: () => Generator<T, void, unknown>
 	push(value: T): void
+	delete(value: T, index?: number | null): void
+	// if (property === "splice")
+	// if (property === "insertAfter")
+	// if (property === "insertBelow")
+	// if (property === "remove...?")
 }
 
 // ============================================================================
@@ -242,7 +251,7 @@ export function writeObj<T extends { id: string }>(
 export function hardDeleteObj(
 	dbOrTx: TupleStorage | Transaction,
 	id: string,
-	backlinks = false
+	backlinks = true
 ) {
 	return composeTx(dbOrTx, (tx) => {
 		const objectProperties = tx.scan({ prefix: ["eaov", id] }).map(first)
@@ -339,6 +348,12 @@ export function getProxyObjProp<O extends Obj, T extends keyof O>(
 	return readProp(db, id, prop, propType) as any
 }
 
+// TODO: this inherently must be a flat object.
+// Otherwise we have ambiguities.
+// obj.key = otherObj or list[1] = otherObj
+// Do we delete the old object? Or just unlink it?
+// Also, what if we just want the id? Since objects have arbitrary keys,
+// it's impossible to get both of these functionalities without having reserved words...
 export function proxyObj<T extends Obj>(
 	db: TupleStorage | Transaction,
 	id: string,
@@ -404,7 +419,7 @@ export function appendProp<T extends Prop>(
 }
 
 export function getProxyListItem<T extends Prop>(
-	dbOrTx: ReadOnlyTupleStorage,
+	db: ReadOnlyTupleStorage,
 	id: string,
 	prop: string,
 	index: number,
@@ -415,7 +430,7 @@ export function getProxyListItem<T extends Prop>(
 	if (dataType.type === "object")
 		throw new Error("Flatten your schema. No nested objects inside lists.")
 
-	const values = dbOrTx
+	const values = db
 		.scan({ prefix: ["eaov", id, prop] })
 		.map(first)
 		.map(last)
@@ -424,6 +439,19 @@ export function getProxyListItem<T extends Prop>(
 	const error = t.validateDataType(dataType, value)
 	if (error) throw new Error(t.formatError(error))
 	return value as any
+}
+
+export function getListItemIndexes(
+	db: ReadOnlyTupleStorage,
+	eav: [Value, Value, Value]
+) {
+	const [e, a, v] = eav
+	const indexes = db
+		.scan({ prefix: ["vaeo", v, a, e] })
+		.map(first) // [key, value] => key
+		.map(last) // ["vaeo", v, a, e, o] => o
+		.filter(t.or(t.number, t.null_).is) // only numbers for now. fractional indexing later.
+	return indexes
 }
 
 export function proxyList<T extends Prop>(
@@ -439,8 +467,13 @@ export function proxyList<T extends Prop>(
 	const getListProxyProp = (prop: string | symbol) => {
 		if (prop === isProxyListSymbol) return true
 		if (prop === toJsonSymbol) throw new Error("Not implemented yet.")
-		if (prop === Symbol.iterator) {
-			return function* () {
+
+		if (prop === "length") {
+			return db.scan({ prefix: ["eaov", id, listProp] }).length
+		}
+
+		const fns: ProxyListFns<T> = {
+			*[Symbol.iterator]() {
 				// TODO: validate the schema here.
 				const values = db
 					.scan({ prefix: ["eaov", id, listProp] })
@@ -450,24 +483,42 @@ export function proxyList<T extends Prop>(
 					const error = t.validateDataType(dataType, value)
 					if (error)
 						throw new Error("Item does not match schema: " + dataType.type)
-					yield value
+					yield value as T
 				}
-			}
+			},
+			push(value: T) {
+				appendProp(db, id, listProp, value, dataType)
+			},
+			/**
+			 * Deletes value at index.
+			 * Index is null for object properties... that shouldn't be relevant here.
+			 * When undefined, we lookup and delete from all positions.
+			 * Number should maybe fetch the whole list and delete the nth item.
+			 * String should be fractionally indexed.
+			 *
+			 * this function is a WIP.
+			 */
+			delete(value, index) {
+				let indexes: (number | null)[] = []
+				if (index === undefined) {
+					indexes = getListItemIndexes(db, [id, listProp, value])
+				} else {
+					indexes.push(index)
+				}
+
+				composeTx(db, (tx) => {
+					for (const index of indexes) {
+						tx.remove(["eaov", id, listProp, index, value])
+					}
+				})
+			},
+		}
+
+		if (fns[prop]) {
+			return fns[prop]
 		}
 
 		if (typeof prop === "symbol") return undefined
-
-		if (prop === "length") {
-			return db.scan({ prefix: ["eaov", id, listProp] }).length
-		}
-
-		if (prop === "push")
-			return (value: T) => appendProp(db, id, listProp, value, dataType)
-
-		// if (property === "splice")
-		// if (property === "insertAfter")
-		// if (property === "insertBelow")
-		// if (property === "remove...?")
 
 		const n = parseInt(prop)
 		if (!isNaN(n)) return getProxyListItem(db, id, listProp, n, dataType)
@@ -508,11 +559,18 @@ export function subscribeObj<T extends { id: string }>(
 
 	const unsubscribes = new Set<() => void>()
 	for (const [prop, propType] of Object.entries(schema.dataType.required)) {
+		if (prop === "id") continue
 		unsubscribes.add(
 			db.subscribe({ prefix: ["eaov", id, prop] }, (writes) => {
-				const value = readProp(db, id, prop, new t.RuntimeDataType(propType))
-				obj = { ...obj, [prop]: value }
-				callback(obj)
+				try {
+					// TODO: only catch the error if its not valid for the schema.
+					// This can error when we're deleting an object.
+					const value = readProp(db, id, prop, new t.RuntimeDataType(propType))
+					obj = { ...obj, [prop]: value }
+					callback(obj)
+				} catch (error) {
+					// console.error(error)
+				}
 			})
 		)
 	}
