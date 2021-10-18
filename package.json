@@ -21,9 +21,11 @@
     "@types/lodash": "^4.14.175",
     "@types/mocha": "github:whitecolor/mocha-types",
     "@types/node": "^14.17.26",
+    "@types/react": "^17.0.30",
     "fs-extra": "^9.1.0",
     "mocha": "^8.4.0",
     "prettier": "^2.4.1",
+    "react": "^17.0.2",
     "ts-node": "^9.1.1",
     "tuple-database": "^1.2.5",
     "typescript": "^4.4.4"

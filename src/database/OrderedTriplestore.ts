@@ -66,7 +66,7 @@ type ProxyObjProp<T extends Prop | Prop[] = Prop | Prop[]> = T extends Prop[]
 	? ProxyObj<T>
 	: T
 
-type ProxyObj<T extends Obj> = {
+export type ProxyObj<T extends Obj> = {
 	[isProxyObjSymbol]: true
 	[toJsonSymbol](): T
 } & {
@@ -562,6 +562,7 @@ export function subscribeObj<T extends { id: string }>(
 		if (prop === "id") continue
 		unsubscribes.add(
 			db.subscribe({ prefix: ["eaov", id, prop] }, (writes) => {
+				// if (writes.remove)
 				try {
 					// TODO: only catch the error if its not valid for the schema.
 					// This can error when we're deleting an object.

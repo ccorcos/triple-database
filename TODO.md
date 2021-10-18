@@ -1,6 +1,29 @@
 ## TODO
 
+Just fucking around...
+- import contacts
+- import youtube netflix view history
+- import email?
+- interface for messengers
+- import Notion
+
+
+Bug!
+- make sure that transforming from `[eaov]` to an index without doesn't delete a redundancy. maybe we should just include o in all of them.
+
+
+Game Counter
+- errors deleteObj will validate the schema... hmm.
+	- make schema partial everywhere so that it never errors
+- debug the useObj stuff. sometimes "Reset Game" breaks.
+	- why does this happen though. deleteObj called readObj...
+	- softer delete.
+- Also better debugging logs. show the actual type that's failing!
+
+- use a dispatcher so we can see what actions are called.
 - what to do about reactivity causing invalid schema? when deleting an object...
+- listProxy.delete() tests
+
 
 - we need to rebuild the game counter. let real development drive what I build next.
 	- re-order players
